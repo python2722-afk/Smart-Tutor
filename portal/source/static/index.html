@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Test4 物理数学搜题机</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,"Microsoft YaHei",sans-serif;color:#152238;background:#eef2f7}
+    *{box-sizing:border-box}body{margin:0}.page{max-width:860px;margin:auto;padding:18px 14px 48px}
+    h1{font-size:1.6rem;margin:.3rem 0}.sub{color:#586579;margin:.25rem 0 1.1rem;line-height:1.55}
+    .panel,.card{background:#fff;border:1px solid #d6dee9;border-radius:16px;padding:16px;margin:12px 0;box-shadow:0 3px 14px #17325a12}
+    .section-title{font-size:1rem;font-weight:750;margin:0 0 10px}.subjects{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .subject{position:relative;width:100%;margin:0;padding:15px 12px;border:2px solid #cbd6e5;border-radius:13px;background:#f7f9fc;color:#273950;text-align:left;font-weight:750;font-size:1.05rem}
+    .subject[aria-pressed="true"]{border-color:#2c67b1;background:#eaf3ff;color:#174f94}.subject:disabled{opacity:.55}.availability{display:block;margin-top:5px;font-size:.78rem;font-weight:500;color:#6a7789}
+    .upload{display:block;border:2px dashed #8fa1b8;border-radius:14px;padding:24px 12px;text-align:center;background:#f8fafc;margin-top:15px}
+    input{display:block;width:100%;font-size:1rem;margin-top:10px}.filename{font-size:.85rem;color:#546377;margin:8px 0 0;overflow-wrap:anywhere}
+    #start{width:100%;border:0;border-radius:12px;background:#245fa8;color:#fff;font-size:1.08rem;font-weight:750;padding:14px;margin-top:12px}
+    button:disabled{opacity:.55}.status{font-weight:750}.progress{height:8px;background:#dfe6ef;border-radius:99px;overflow:hidden;margin-top:12px}.bar{height:100%;width:0;background:#397bc8;transition:width .4s}
+    .result img{display:block;width:100%;height:auto;background:#fff;border:1px solid #dce3ec;border-radius:8px}.tag{display:inline-block;background:#e9f2fd;color:#185493;border-radius:99px;padding:5px 10px;font-size:.82rem;margin-bottom:9px}
+    .error{color:#a21c1c;white-space:pre-wrap}.download{display:block;text-align:center;padding:10px;border-radius:9px;background:#edf3fa;color:#245b97;text-decoration:none;margin-top:9px;font-weight:650}
+    .result-heading{font-size:1.1rem;margin:22px 2px 5px}.service-note{font-size:.85rem;color:#657286;margin-top:10px;line-height:1.5}.boundary{color:#6b5841;background:#fff8e9;border:1px solid #ead8b8;border-radius:11px;padding:10px 12px;margin:10px 0 0;font-size:.87rem;line-height:1.55}[hidden]{display:none!important}
+    .login-row{display:flex;gap:9px}.login-row input{margin:0;min-width:0;padding:12px;border:1px solid #aab8ca;border-radius:10px}.login-row button,.logout{border:0;border-radius:10px;padding:11px 15px;background:#245fa8;color:#fff;font-weight:700}.head-row{display:flex;align-items:center;justify-content:space-between;gap:12px}.logout{background:#64748b;padding:8px 12px}
+  </style>
+</head>
+<body><main class="page">
+  <div class="head-row"><h1>Test4 物理数学搜题机</h1><button id="logout" class="logout" type="button" hidden>退出</button></div>
+  <p class="sub">手机可以直接拍照；联网硬件可以调用同一套 Test4 API。处理完成后固定返回四张结果图。</p>
+  <p class="boundary">适用年级：数学覆盖小学、初中、高中；物理覆盖小学科学中的物理内容、初中、高中。题型边界：两学科当前主要面向完整的非选择题，包括计算题、解答题、证明题、实验探究题、简答题和综合应用题；选择题、填空题、判断题暂不承诺答案隔离。两学科默认保留照片中的全部笔迹，黑笔、铅笔与印刷字重叠时不保证去除。</p>
+  <section id="loginPanel" class="panel" hidden>
+    <p class="section-title">输入设备访问令牌</p>
+    <div class="login-row"><input id="accessToken" type="password" autocomplete="current-password" placeholder="服务器提供的访问令牌"><button id="login" type="button">进入</button></div>
+    <p id="loginError" class="error" role="alert"></p>
+  </section>
+  <section id="appPanel" class="panel" hidden>
+    <p class="section-title">1. 选择题目类型</p>
+    <div class="subjects" role="radiogroup" aria-label="题目类型">
+      <button class="subject" type="button" data-subject="physics" aria-pressed="true">
+        物理题<span class="availability" data-health="physics">正在检查服务</span>
+      </button>
+      <button class="subject" type="button" data-subject="math" aria-pressed="false">
+        数学题<span class="availability" data-health="math">正在检查服务</span>
+      </button>
+    </div>
+    <label class="upload">
+      <strong>2. 选择图片或直接拍照</strong>
+      <input id="image" type="file" accept="image/jpeg,image/png,image/webp" capture="environment">
+      <span id="filename" class="filename">单张图片不超过 20 MB</span>
+    </label>
+    <button id="start" type="button">开始处理物理题</button>
+    <div id="work" hidden>
+      <p id="status" class="status" aria-live="polite"></p>
+      <div class="progress"><div id="bar" class="bar"></div></div>
+      <p id="error" class="error" role="alert"></p>
+    </div>
+    <p class="service-note">页面不会跳到其他端口；物理和数学任务都由当前网址转发。服务器会暂存题图用于生成结果，请勿上传无关隐私照片。</p>
+  </section>
+  <section id="results" class="result" aria-live="polite"></section>
+</main>
+<script>
+const MAX_BYTES=20*1024*1024;
+const API='/api/v1';
+const subjectNames={physics:'物理',math:'数学'};
+const resultNames=['第一张 · 原题知识图','第二张 · 学霸版（最少提示）','第三张 · 普通版（标准提示）','第四张 · 基础版（详细提示）'];
+const labels={queued:'已上传，等待处理',preprocessing:'正在校正并预处理题图',solving:'大模型正在生成分层思路',rendering:'正在生成四张结果图',completed:'处理完成',failed:'处理失败'};
+const widths={queued:8,preprocessing:25,solving:58,rendering:84,completed:100,failed:100};
+const file=document.querySelector('#image'),start=document.querySelector('#start'),work=document.querySelector('#work'),statusEl=document.querySelector('#status'),bar=document.querySelector('#bar'),errorEl=document.querySelector('#error'),results=document.querySelector('#results'),filenameEl=document.querySelector('#filename');
+const loginPanel=document.querySelector('#loginPanel'),appPanel=document.querySelector('#appPanel'),tokenInput=document.querySelector('#accessToken'),loginButton=document.querySelector('#login'),loginError=document.querySelector('#loginError'),logoutButton=document.querySelector('#logout');
+const subjectButtons=[...document.querySelectorAll('.subject')];
+let selectedSubject='physics',busy=false;
+const availability={physics:null,math:null};
+
+function updateStart(){
+  start.textContent='开始处理'+subjectNames[selectedSubject]+'题';
+  start.disabled=busy||availability[selectedSubject]===false;
+}
+function chooseSubject(subject){
+  if(busy||!subjectNames[subject])return;
+  selectedSubject=subject;
+  subjectButtons.forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.subject===subject)));
+  results.innerHTML='';work.hidden=true;updateStart();
+}
+subjectButtons.forEach(button=>button.addEventListener('click',()=>chooseSubject(button.dataset.subject)));
+
+async function refreshHealth(){
+  try{
+    const response=await fetch('/health',{cache:'no-store'});
+    const data=await response.json();
+    for(const subject of Object.keys(subjectNames)){
+      const state=data.subjects&&data.subjects[subject];
+      availability[subject]=state?Boolean(state.available):false;
+      document.querySelector(`[data-health="${subject}"]`).textContent=availability[subject]?'服务正常':'服务暂不可用';
+      document.querySelector(`[data-subject="${subject}"]`).disabled=busy||availability[subject]===false;
+    }
+  }catch(_){
+    for(const subject of Object.keys(subjectNames))document.querySelector(`[data-health="${subject}"]`).textContent='暂时无法检查';
+  }
+  updateStart();
+}
+
+function setBusy(value){
+  busy=value;subjectButtons.forEach(button=>button.disabled=value||availability[button.dataset.subject]===false);updateStart();
+}
+function render(state){
+  work.hidden=false;statusEl.textContent=(subjectNames[state.subject]||subjectNames[selectedSubject])+'：'+(labels[state.status]||state.status);bar.style.width=(widths[state.status]||5)+'%';errorEl.textContent=state.error?state.error.message||String(state.error):'';
+  if(state.status==='completed'){
+    results.innerHTML='';const heading=document.createElement('h2');heading.className='result-heading';heading.textContent=subjectNames[state.subject]+'题 · 四张结果图';results.append(heading);
+    state.images.forEach((item,index)=>{
+      const card=document.createElement('article');card.className='card';
+      const tag=document.createElement('span');tag.className='tag';tag.textContent=resultNames[index]||item.kind;
+      const img=document.createElement('img');img.src=item.url+'?v='+encodeURIComponent(state.updated_at||Date.now());img.alt=tag.textContent;img.loading=index?'lazy':'eager';
+      const download=document.createElement('a');download.className='download';download.href=item.url;download.download=item.filename;download.textContent='下载这张结果图';
+      card.append(tag,img,download);results.append(card);
+    });
+    setBusy(false);
+  }else if(state.status==='failed'){setBusy(false)}
+}
+async function jsonResponse(response,fallback){
+  let payload;try{payload=await response.json()}catch(_){throw new Error(fallback)}
+  if(!response.ok)throw new Error(payload.detail||fallback);return payload;
+}
+async function poll(subject,id){
+  const deadline=Date.now()+12*60*1000;
+  for(;;){
+    if(Date.now()>deadline)throw new Error('处理时间较长，请稍后重新提交');
+    await new Promise(resolve=>setTimeout(resolve,1200));
+    const response=await fetch(`${API}/${encodeURIComponent(subject)}/jobs/${encodeURIComponent(id)}`,{cache:'no-store'});
+    const state=await jsonResponse(response,'暂时无法读取任务状态');render(state);
+    if(state.status==='completed'||state.status==='failed')return;
+  }
+}
+file.addEventListener('change',()=>{
+  const selected=file.files[0];filenameEl.textContent=selected?selected.name+' · '+(selected.size/1024/1024).toFixed(1)+' MB':'单张图片不超过 20 MB';results.innerHTML='';
+});
+start.addEventListener('click',async()=>{
+  const selected=file.files[0];
+  if(!selected){alert('请先拍照或选择题目图片');return}
+  if(!['image/jpeg','image/png','image/webp'].includes(selected.type)){alert('请选择 JPEG、PNG 或 WebP 图片');return}
+  if(selected.size>MAX_BYTES){alert('图片不能超过 20 MB');return}
+  const subject=selectedSubject;setBusy(true);results.innerHTML='';errorEl.textContent='';work.hidden=false;statusEl.textContent=subjectNames[subject]+'：正在上传';bar.style.width='3%';
+  const body=new FormData();body.append('image',selected,selected.name||'camera.jpg');
+  try{
+    const response=await fetch(`${API}/${encodeURIComponent(subject)}/jobs`,{method:'POST',body});
+    const state=await jsonResponse(response,'上传失败，请稍后重试');render(state);await poll(subject,state.job_id);
+  }catch(error){render({subject,status:'failed',error:{message:error.message||'处理失败，请稍后重试'}})}
+});
+async function checkSession(){
+  try{const response=await fetch(`${API}/auth/session`,{cache:'no-store'});const data=await response.json();showApp(Boolean(data.authenticated));}
+  catch(_){showApp(false)}
+}
+function showApp(authenticated){loginPanel.hidden=authenticated;appPanel.hidden=!authenticated;logoutButton.hidden=!authenticated;if(authenticated){refreshHealth();updateStart()}}
+loginButton.addEventListener('click',async()=>{
+  loginError.textContent='';loginButton.disabled=true;
+  try{const response=await fetch(`${API}/auth/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:tokenInput.value})});await jsonResponse(response,'登录失败');tokenInput.value='';showApp(true)}
+  catch(error){loginError.textContent=error.message||'登录失败'}finally{loginButton.disabled=false}
+});
+tokenInput.addEventListener('keydown',event=>{if(event.key==='Enter')loginButton.click()});
+logoutButton.addEventListener('click',async()=>{await fetch(`${API}/auth/logout`,{method:'DELETE'});results.innerHTML='';showApp(false)});
+checkSession();setInterval(()=>{if(!appPanel.hidden)refreshHealth()},15000);updateStart();
+</script></body></html>
+

@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="theme-color" content="#1a73e8">
+<title>Smart Tutor · 智能答题</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<style>
+*{-webkit-tap-highlight-color:transparent;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f0f2f5;min-height:100dvh}
+.page{display:none;animation:fadeIn .3s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:24px;height:24px;border:3px solid #e5e7eb;border-top-color:#1a73e8;border-radius:50%;animation:spin .8s linear infinite;display:inline-block;vertical-align:middle}
+.upload-area{border:2px dashed #cbd5e1;border-radius:16px;transition:all .2s;cursor:pointer;background:#fafafa}
+.upload-area:active{background:#e8f0fe;border-color:#1a73e8}
+.upload-area.has-image{border-style:solid;border-color:#1a73e8;background:#f0f7ff}
+.preview-img{max-height:300px;object-fit:contain;border-radius:12px}
+.subject-chip{padding:6px 16px;border-radius:20px;font-size:14px;border:1.5px solid #d1d5db;background:white;transition:all .15s;cursor:pointer}
+.subject-chip.active{background:#1a73e8;color:white;border-color:#1a73e8}
+.btn-primary{background:#1a73e8;color:white;border:none;border-radius:12px;padding:14px 24px;font-size:16px;font-weight:600;width:100%;transition:all .15s;cursor:pointer}
+.btn-primary:active{background:#1557b0;transform:scale(.98)}
+.btn-primary:disabled{background:#93c5fd;cursor:not-allowed;transform:none}
+.btn-secondary{background:white;color:#374151;border:1.5px solid #d1d5db;border-radius:12px;padding:12px 20px;font-size:15px;font-weight:500;width:100%;cursor:pointer;transition:all .15s}
+.btn-secondary:active{background:#f3f4f6}
+.btn-success{background:#16a34a;color:white;border:none;border-radius:12px;padding:12px 20px;font-size:15px;font-weight:600;width:100%;cursor:pointer;transition:all .15s}
+.btn-success:active{background:#15803d;transform:scale(.98)}
+.progress-bar{height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#1a73e8,#4f9cf7);border-radius:3px;transition:width .5s ease}
+.result-card{background:white;border-radius:16px;padding:20px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.history-item{padding:14px 16px;border-bottom:1px solid #f3f4f6;cursor:pointer;transition:background .15s}
+.history-item:active{background:#f9fafb}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1f2937;color:white;padding:10px 24px;border-radius:12px;font-size:14px;z-index:100;opacity:0;transition:opacity .3s}
+.toast.show{opacity:1}
+.katex-block{margin:8px 0;overflow-x:auto;padding:4px 0}
+.mode-btn{transition:all .2s;cursor:pointer}
+.mode-btn.active-mode{background:white;color:#1a73e8;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.step-card{background:white;border-radius:16px;padding:20px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);border-left:4px solid #1a73e8}
+.step-progress{display:flex;gap:6px;margin-bottom:16px;justify-content:center}
+.step-dot{width:10px;height:10px;border-radius:50%;background:#e5e7eb;transition:all .3s}
+.step-dot.done{background:#1a73e8}
+.step-dot.active{background:#4f9cf7;transform:scale(1.3)}
+</style>
+</head>
+<body>
+
+<div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 flex" style="padding-bottom:env(safe-area-inset-bottom,0)">
+  <button class="flex-1 flex flex-col items-center py-2 text-xs text-gray-400 nav-btn active-nav" onclick="switchPage('page-home')">
+    <span class="text-xl mb-0.5">📷</span><span>拍照</span>
+  </button>
+  <button class="flex-1 flex flex-col items-center py-2 text-xs text-gray-400 nav-btn" onclick="switchPage('page-history');loadHistory()">
+    <span class="text-xl mb-0.5">📋</span><span>历史</span>
+  </button>
+</div>
+
+<div class="pb-20 px-4 pt-4 max-w-lg mx-auto">
+
+  <!-- ════ 主页 ════ -->
+  <div id="page-home" class="page active">
+    <div class="text-center mb-5">
+      <h1 class="text-2xl font-bold text-gray-800">Smart Tutor</h1>
+      <p class="text-sm text-gray-500 mt-1">拍题 · 识别 · 解答</p>
+    </div>
+
+    <div class="flex bg-gray-100 rounded-xl p-1 mb-4">
+      <button class="flex-1 py-2.5 text-sm font-medium rounded-lg mode-btn active-mode" onclick="setMode(this,'full')">📝 完整解答</button>
+      <button class="flex-1 py-2.5 text-sm font-medium rounded-lg mode-btn" onclick="setMode(this,'step')">👣 逐步引导</button>
+    </div>
+
+    <div id="status-bar" class="flex items-center justify-between text-xs text-gray-400 mb-3 px-1">
+      <span id="sys-status">⏳ 检查连接...</span>
+      <span id="rate-info"></span>
+    </div>
+
+    <div class="upload-area p-6 text-center mb-4" onclick="document.getElementById('file-input').click()">
+      <input type="file" id="file-input" accept="image/*" capture="environment" class="hidden" onchange="onFileSelect(event)">
+      <div id="upload-placeholder">
+        <div class="text-5xl mb-3">📸</div>
+        <div class="text-gray-600 font-medium text-lg mb-1">点击拍照或选图</div>
+        <div class="text-gray-400 text-sm">支持 jpg / png / webp</div>
+      </div>
+      <div id="upload-preview" class="hidden">
+        <img id="preview-img" class="preview-img mx-auto mb-3" alt="预览">
+        <div class="text-sm text-gray-500" id="file-name"></div>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap gap-2 mb-5 justify-center">
+      <span class="subject-chip active" onclick="selectSubject(this,'auto')">🤖 自动</span>
+      <span class="subject-chip" onclick="selectSubject(this,'math')">📐 数学</span>
+      <span class="subject-chip" onclick="selectSubject(this,'physics')">⚡ 物理</span>
+      <span class="subject-chip" onclick="selectSubject(this,'circuit')">🔌 电路</span>
+      <span class="subject-chip" onclick="selectSubject(this,'chemistry')">🧪 化学</span>
+    </div>
+
+    <button class="btn-primary" id="btn-submit" onclick="submitSolve()" disabled>🤔 选择题目图片</button>
+  </div>
+
+  <!-- ════ 结果页 ════ -->
+  <div id="page-result" class="page">
+    <div class="flex items-center mb-4">
+      <button class="text-gray-500 text-xl mr-3" onclick="switchPage('page-home')">←</button>
+      <h2 class="text-lg font-bold text-gray-800" id="result-title">解答结果</h2>
+    </div>
+
+    <div id="result-loading" class="result-card text-center py-10">
+      <div class="spinner mx-auto mb-4" style="width:40px;height:40px;border-width:4px"></div>
+      <div class="text-gray-700 font-medium text-lg mb-2" id="progress-text">正在识别题目...</div>
+      <div class="progress-bar w-full max-w-xs mx-auto mb-3">
+        <div class="progress-fill" id="progress-fill" style="width:15%"></div>
+      </div>
+      <div class="text-xs text-gray-400" id="progress-detail">请稍候</div>
+    </div>
+
+    <div id="result-full" class="hidden">
+      <div class="result-card">
+        <div id="result-body" class="text-gray-800 leading-relaxed text-[15px] space-y-3"></div>
+      </div>
+      <div id="result-ocr" class="result-card hidden">
+        <h3 class="font-semibold text-gray-500 text-sm mb-2">📄 OCR 识别文本</h3>
+        <div class="text-gray-600 text-sm leading-relaxed" id="ocr-body"></div>
+      </div>
+      <div class="flex gap-3 mt-4">
+        <button class="btn-secondary flex-1" onclick="switchPage('page-home')">📷 继续拍照</button>
+        <button class="btn-secondary flex-1" onclick="copyResult()">📋 复制</button>
+      </div>
+    </div>
+
+    <div id="result-step" class="hidden">
+      <div class="step-progress" id="step-dots"></div>
+      <div class="step-card" id="step-content">
+        <div class="text-lg font-semibold text-gray-800 mb-2" id="step-title"></div>
+        <div class="text-gray-700 leading-relaxed text-[15px]" id="step-body"></div>
+      </div>
+      <button class="btn-success mt-2" id="btn-next-step" onclick="nextStep()">继续→ 下一步</button>
+      <div class="flex gap-3 mt-4">
+        <button class="btn-secondary flex-1" onclick="switchPage('page-home')">📷 换一题</button>
+      </div>
+    </div>
+
+    <div id="result-error" class="hidden result-card text-center py-8">
+      <div class="text-4xl mb-3">⛔</div>
+      <div class="text-gray-700 font-medium text-lg mb-2" id="error-title">请求被拒绝</div>
+      <div class="text-gray-500 text-sm mb-4" id="error-detail"></div>
+      <button class="btn-secondary max-w-[200px] mx-auto" onclick="switchPage('page-home')">返回重试</button>
+    </div>
+  </div>
+
+  <!-- ════ 历史页 ════ -->
+  <div id="page-history" class="page">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-bold text-gray-800">📋 答题历史</h2>
+      <span class="text-xs text-gray-400" id="history-stats"></span>
+    </div>
+    <div id="history-list" class="bg-white rounded-2xl shadow-sm overflow-hidden">
+      <div class="text-center py-10 text-gray-400">加载中...</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ════ 配置：改成你电脑的局域网IP ════
+const API_BASE = 'http://192.168.110.118:8000'
+
+// ════ State ════
+let selectedFile = null, selectedSubject = 'auto', currentMode = 'full'
+let currentResult = null, currentSession = null, currentStepData = null
+
+function switchPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+  document.getElementById(name).classList.add('active')
+}
+
+function setMode(el, mode) {
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active-mode'))
+  el.classList.add('active-mode')
+  currentMode = mode
+  updateSubmitBtn()
+}
+
+function onFileSelect(e) {
+  const f = e.target.files[0]; if(!f) return
+  selectedFile = f
+  const r = new FileReader()
+  r.onload = ev => {
+    document.getElementById('upload-placeholder').classList.add('hidden')
+    document.getElementById('upload-preview').classList.remove('hidden')
+    document.getElementById('preview-img').src = ev.target.result
+    document.getElementById('file-name').textContent = f.name
+    document.querySelector('.upload-area').classList.add('has-image')
+    updateSubmitBtn()
+  }
+  r.readAsDataURL(f)
+}
+
+function updateSubmitBtn() {
+  const btn = document.getElementById('btn-submit')
+  const label = currentMode === 'step' ? '👣 逐步引导解答' : '🚀 提交解答'
+  btn.disabled = !selectedFile
+  btn.textContent = selectedFile ? label : '🤔 选择题目图片'
+}
+
+function selectSubject(el, subj) {
+  document.querySelectorAll('.subject-chip').forEach(c => c.classList.remove('active'))
+  el.classList.add('active')
+  selectedSubject = subj
+}
+
+async function submitSolve() {
+  if(!selectedFile) return showToast('请先拍照或选择图片')
+  const btn = document.getElementById('btn-submit')
+  btn.disabled = true; btn.textContent = '⏳ 提交中...'
+
+  switchPage('page-result')
+  document.getElementById('result-loading').classList.remove('hidden')
+  document.getElementById('result-full').classList.add('hidden')
+  document.getElementById('result-step').classList.add('hidden')
+  document.getElementById('result-error').classList.add('hidden')
+  const isStep = currentMode === 'step'
+  document.getElementById('result-title').textContent = isStep ? '👣 逐步引导' : '📝 解答结果'
+
+  simulateProgress(isStep)
+
+  try {
+    const fd = new FormData()
+    fd.append('file', selectedFile)
+    fd.append('subject', selectedSubject)
+    fd.append('mode', currentMode)
+
+    const resp = await fetch(API_BASE + '/api/solve', {method:'POST', body:fd})
+    setProgress(90, isStep ? '正在分析题目...' : '正在生成解答...')
+
+    if(!resp.ok) {
+      const err = await resp.json().catch(()=>({detail:'HTTP '+resp.status}))
+      throw new Error(err.detail || '服务器错误')
+    }
+    const data = await resp.json()
+    currentResult = data
+
+    if(isStep && data.mode === 'step') {
+      currentSession = data.id
+      showStep(data)
+    } else {
+      showFull(data)
+    }
+  } catch(err) {
+    showError(err.message)
+  } finally {
+    btn.disabled = false
+    updateSubmitBtn()
+  }
+}
+
+let pt = null
+function simulateProgress(isStep) {
+  const steps = isStep
+    ? [{p:15,t:'正在识别题目...',d:'图像预处理'},{p:35,t:'文字提取中...',d:'OCR识别'},{p:55,t:'分析题目结构...',d:'拆解为多个步骤'},{p:75,t:'正在生成解答...',d:'逐步推导中'},{p:90,t:'即将完成',d:'格式整理'}]
+    : [{p:15,t:'正在识别题目...',d:'图像预处理'},{p:35,t:'OCR文字提取...',d:'调用识别模型'},{p:55,t:'交叉验证中...',d:'双模型比对'},{p:75,t:'正在生成解答...',d:'大模型推理'},{p:90,t:'即将完成',d:'输出审查'}]
+  let i=0; if(pt) clearInterval(pt)
+  pt = setInterval(() => {
+    if(i<steps.length){const s=steps[i++]; setProgress(s.p,s.t,s.d)}
+    else clearInterval(pt)
+  }, 1800)
+}
+
+function setProgress(pct,text,detail) {
+  document.getElementById('progress-fill').style.width=pct+'%'
+  if(text) document.getElementById('progress-text').textContent=text
+  if(detail) document.getElementById('progress-detail').textContent=detail
+}
+
+function showFull(data) {
+  clearInterval(pt); setProgress(100,'完成','')
+  setTimeout(()=>{
+    document.getElementById('result-loading').classList.add('hidden')
+    document.getElementById('result-full').classList.remove('hidden')
+    document.getElementById('result-body').innerHTML = renderAnswer(data.answer||'(无)')
+    tryKaTeX()
+    if(data.ocr_text && data.ocr_text.length>10){
+      document.getElementById('result-ocr').classList.remove('hidden')
+      document.getElementById('ocr-body').textContent=data.ocr_text
+    }
+  },400)
+}
+
+function showStep(data) {
+  clearInterval(pt); setProgress(100,'完成','')
+  currentStepData = data
+  setTimeout(()=>{
+    document.getElementById('result-loading').classList.add('hidden')
+    document.getElementById('result-step').classList.remove('hidden')
+    renderStep(data.step, data.current_step, data.total_steps)
+  },400)
+}
+
+function renderStep(step, current, total) {
+  document.getElementById('step-title').textContent = '📌 ' + (step.title||'')
+  document.getElementById('step-body').innerHTML = renderAnswer(step.content||'')
+  let dots = ''
+  for(let i=0;i<total;i++){
+    let cls='step-dot'
+    if(i<current-1) cls+=' done'
+    else if(i===current-1) cls+=' active'
+    dots += '<div class="'+cls+'"></div>'
+  }
+  document.getElementById('step-dots').innerHTML = dots
+  const btn = document.getElementById('btn-next-step')
+  if(current >= total) {
+    btn.textContent = '✅ 已完成全部步骤'
+    btn.disabled = true
+    btn.className = 'btn-secondary mt-2'
+  } else {
+    btn.textContent = '继续→ 下一步 ('+current+'/'+total+')'
+    btn.disabled = false
+    btn.className = 'btn-success mt-2'
+  }
+  tryKaTeX()
+}
+
+async function nextStep() {
+  if(!currentSession) return
+  const btn = document.getElementById('btn-next-step')
+  btn.disabled = true; btn.textContent = '⏳ 加载中...'
+  try {
+    const resp = await fetch(API_BASE + '/api/step/' + currentSession)
+    const data = await resp.json()
+    if(data.done) {
+      btn.textContent = '✅ 全部完成！'
+      btn.className = 'btn-secondary mt-2'
+      showToast('🎉 所有步骤已完成！')
+      return
+    }
+    currentStepData = data
+    renderStep(data.step, data.current_step, data.total_steps)
+  } catch(err) {
+    showToast('加载失败: '+err.message)
+    btn.disabled = false; btn.textContent = '🔄 重试'
+  }
+}
+
+function showError(msg) {
+  clearInterval(pt)
+  document.getElementById('result-loading').classList.add('hidden')
+  document.getElementById('result-error').classList.remove('hidden')
+  document.getElementById('error-detail').textContent = msg
+  if(msg.includes('速率')) document.getElementById('error-title').textContent = '⏳ 操作太频繁'
+  else if(msg.includes('过大')) document.getElementById('error-title').textContent = '📎 文件过大'
+  else document.getElementById('error-title').textContent = '❌ 请求失败'
+}
+
+function copyResult() {
+  if(!currentResult||!currentResult.answer) return showToast('没有可复制的内容')
+  navigator.clipboard.writeText(currentResult.answer.replace(/<[^>]*>/g,''))
+    .then(()=>showToast('✅ 已复制')).catch(()=>showToast('复制失败'))
+}
+
+function renderAnswer(text) {
+  if(!text) return '<span class="text-gray-400">(空)</span>'
+  let h = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  h = h.replace(/\$\$(.+?)\$\$/gs, (m,f) => {
+    try{return '<div class="katex-block my-2 overflow-x-auto">'+katex.renderToString(f.trim(),{throwOnError:false,displayMode:true})+'</div>'}
+    catch(e){return '<span class="text-red-500">$$'+f+'$$</span>'}
+  })
+  h = h.replace(/\$(.+?)\$/g, (m,f) => {
+    try{return katex.renderToString(f,{throwOnError:false,displayMode:false})}
+    catch(e){return '<span class="text-red-500">$'+f+'$</span>'}
+  })
+  h = h.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+  h = h.replace(/\n/g,'<br>')
+  return h
+}
+
+function tryKaTeX() {
+  if(window.renderMathInElement) {
+    document.querySelectorAll('#step-body,#result-body').forEach(el => {
+      renderMathInElement(el, {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})
+    })
+  }
+}
+
+async function loadHistory() {
+  const list = document.getElementById('history-list')
+  list.innerHTML = '<div class="text-center py-10 text-gray-400">加载中...</div>'
+  try {
+    const resp = await fetch(API_BASE + '/api/history?days=7')
+    const data = await resp.json()
+    document.getElementById('history-stats').textContent = '共'+data.total+'题'
+    if(!data.records.length){
+      list.innerHTML = '<div class="text-center py-10 text-gray-400"><div class="text-4xl mb-3">📭</div>暂无记录</div>'
+      return
+    }
+    list.innerHTML = data.records.map(r => {
+      const t = new Date(r.time).toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})
+      const ic = r.blocked?'⛔':'✅'
+      const p = (r.ocr_text||r.answer||'').replace(/<[^>]*>/g,'').slice(0,50)
+      return '<div class="history-item flex items-center gap-3"><span class="text-lg">'+ic+'</span><div class="flex-1 min-w-0"><div class="text-sm text-gray-800 truncate">'+(p||'(空)')+'</div><div class="text-xs text-gray-400 mt-0.5">'+t+'</div></div></div>'
+    }).join('')
+  } catch(err) {
+    list.innerHTML = '<div class="text-center py-10 text-red-400">加载失败: '+err.message+'</div>'
+  }
+}
+
+let tt=null
+function showToast(msg) {
+  const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show')
+  if(tt) clearTimeout(tt); tt=setTimeout(()=>el.classList.remove('show'),2500)
+}
+
+// ════ 初始化：检查服务器连接 ════
+;(async function init() {
+  try {
+    const r=await fetch(API_BASE + '/api/status'); const d=await r.json()
+    document.getElementById('sys-status').textContent = d.solver ? '✅ 已连接' : '⚠️ 服务异常'
+  }catch(_){
+    document.getElementById('sys-status').textContent = '❌ 无法连接服务器'
+  }
+})()
+</script>
+</body>
+</html>

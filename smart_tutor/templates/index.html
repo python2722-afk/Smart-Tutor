@@ -1,0 +1,1564 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=5.0,user-scalable=yes">
+<meta name="theme-color" id="meta-theme" content="#0f172a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Smart Tutor · 🎓 大物垂直AI</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script>
+tailwind.config={darkMode:'class',theme:{extend:{colors:{primary:{50:'#eff6ff',100:'#dbeafe',200:'#bfdbfe',300:'#93c5fd',400:'#60a5fa',500:'#3b82f6',600:'#2563eb',700:'#1d4ed8',800:'#1e40af',900:'#1e3a8a'}},animation:{'float':'float 6s ease-in-out infinite','pulse-slow':'pulse 3s cubic-bezier(0.4,0,.6,1) infinite','slide-up':'slideUp .5s ease-out','slide-down':'slideDown .3s ease-out'},keyframes:{float:{'0%,100%':{transform:'translateY(0)'},'50%':{transform:'translateY(-10px)'}},slideUp:{from:{opacity:'0',transform:'translateY(30px)'},to:{opacity:'1',transform:'translateY(0)'}},slideDown:{from:{opacity:'0',transform:'translateY(-10px)'},to:{opacity:'1',transform:'translateY(0)'}}}}}}
+</script>
+<style>
+*{-webkit-tap-highlight-color:transparent;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;background:#f1f5f9;min-height:100dvh;transition:background .3s}
+.dark body{background:#0f172a}
+/* === Layout === */
+.app-layout{display:flex;min-height:100dvh}
+.sidebar{width:72px;background:rgba(255,255,255,.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-right:1px solid rgba(0,0,0,.06);display:flex;flex-direction:column;align-items:center;padding:12px 0;position:fixed;top:0;left:0;bottom:0;z-index:50;transition:all .3s}
+.dark .sidebar{background:rgba(15,23,42,.85);border-color:rgba(255,255,255,.06)}
+.sidebar-brand{font-size:26px;margin-bottom:20px;padding:8px;cursor:pointer;transition:transform .2s}
+.sidebar-brand:hover{transform:scale(1.1)}
+.sidebar-nav{flex:1;display:flex;flex-direction:column;gap:4px;width:100%;padding:0 8px}
+.nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px 6px;border-radius:12px;cursor:pointer;transition:all .2s;color:#64748b;text-decoration:none;position:relative}
+.nav-item:hover{background:rgba(59,130,246,.08);color:#3b82f6}
+.nav-item.active{background:rgba(59,130,246,.12);color:#2563eb}
+.dark .nav-item{color:#94a3b8}
+.dark .nav-item:hover{background:rgba(59,130,246,.15);color:#60a5fa}
+.dark .nav-item.active{background:rgba(59,130,246,.2);color:#3b82f6}
+.nav-item .nav-icon{font-size:20px;line-height:1}
+.nav-item .nav-label{font-size:10px;margin-top:4px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:56px}
+.nav-item .badge{position:absolute;top:4px;right:8px;background:#ef4444;color:white;font-size:8px;min-width:14px;height:14px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:700}
+.main-content{flex:1;margin-left:72px;min-height:100dvh;padding:0;transition:margin .3s}
+.content-page{display:none;max-width:1100px;margin:0 auto;padding:24px 28px 100px;animation:slideUp .4s ease-out}
+.content-page.active{display:block}
+.dark .content-page{color:#e2e8f0}
+/* === Bottom Tab (Mobile) === */
+.bottom-tabs{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(255,255,255,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid rgba(0,0,0,.06);z-index:50;padding-bottom:env(safe-area-inset-bottom,0)}
+.dark .bottom-tabs{background:rgba(15,23,42,.92);border-color:rgba(255,255,255,.06)}
+.bottom-tab{flex:1;display:flex;flex-direction:column;align-items:center;padding:6px 0 4px;cursor:pointer;transition:all .2s;color:#94a3b8;min-width:0}
+.bottom-tab.active{color:#2563eb}
+.dark .bottom-tab.active{color:#60a5fa}
+.bottom-tab .tab-icon{font-size:22px;line-height:1}
+.bottom-tab .tab-label{font-size:10px;margin-top:1px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+/* === Cards === */
+.card{background:white;border-radius:16px;padding:20px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.04),0 1px 2px rgba(0,0,0,.02);border:1px solid rgba(0,0,0,.04);transition:all .25s}
+.card:hover{box-shadow:0 4px 12px rgba(0,0,0,.06),0 2px 4px rgba(0,0,0,.04)}
+.dark .card{background:#1e293b;border-color:rgba(255,255,255,.06);box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.dark .card:hover{box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.glass-card{background:rgba(255,255,255,.7);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.2)}
+.dark .glass-card{background:rgba(30,41,59,.7);border-color:rgba(255,255,255,.08)}
+/* === Hero === */
+.hero{background:linear-gradient(135deg,#1e3a8a 0%,#3b82f6 50%,#06b6d4 100%);border-radius:20px;padding:32px 36px;margin-bottom:24px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle at 30% 70%,rgba(255,255,255,.08) 0%,transparent 50%),radial-gradient(circle at 70% 30%,rgba(255,255,255,.05) 0%,transparent 50%);animation:float 8s ease-in-out infinite}
+.hero-content{position:relative;z-index:1}
+.hero h1{font-size:28px;font-weight:800;color:white;margin-bottom:4px;letter-spacing:-.5px}
+.hero p{color:rgba(255,255,255,.75);font-size:14px}
+.hero .hero-badge{display:inline-block;background:rgba(255,255,255,.15);backdrop-filter:blur(8px);padding:4px 14px;border-radius:20px;font-size:12px;color:white;margin-bottom:10px;border:1px solid rgba(255,255,255,.1)}
+/* === Upload Area === */
+.upload-zone{border:2px dashed #cbd5e1;border-radius:16px;padding:40px 20px;text-align:center;cursor:pointer;transition:all .3s;background:#fafafa}
+.upload-zone:hover{border-color:#3b82f6;background:#f0f7ff}
+.upload-zone.dragover{border-color:#3b82f6;background:#eff6ff;transform:scale(1.01)}
+.upload-zone.has-image{border-style:solid;border-color:#3b82f6;background:#f0f7ff;padding:16px}
+.dark .upload-zone{border-color:#475569;background:#1e293b}
+.dark .upload-zone:hover{border-color:#3b82f6;background:rgba(59,130,246,.08)}
+.upload-zone .upload-icon{font-size:48px;margin-bottom:12px;display:block}
+/* === Buttons === */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 20px;border-radius:12px;font-size:14px;font-weight:600;border:none;cursor:pointer;transition:all .2s;white-space:nowrap}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:#2563eb;color:white}
+.btn-primary:hover{background:#1d4ed8;box-shadow:0 4px 12px rgba(37,99,235,.3)}
+.btn-primary:disabled{background:#93c5fd;cursor:not-allowed;box-shadow:none}
+.btn-success{background:#16a34a;color:white}
+.btn-success:hover{background:#15803d;box-shadow:0 4px 12px rgba(22,163,74,.3)}
+.btn-outline{background:transparent;color:#475569;border:1.5px solid #d1d5db}
+.btn-outline:hover{background:#f8fafc;border-color:#3b82f6;color:#2563eb}
+.dark .btn-outline{color:#cbd5e1;border-color:#475569}
+.dark .btn-outline:hover{background:rgba(59,130,246,.1);border-color:#3b82f6;color:#60a5fa}
+.btn-ghost{background:transparent;color:#64748b;padding:8px 12px}
+.btn-ghost:hover{background:rgba(0,0,0,.05)}
+.dark .btn-ghost{color:#94a3b8}
+.dark .btn-ghost:hover{background:rgba(255,255,255,.05)}
+.btn-sm{padding:6px 14px;font-size:12px;border-radius:8px}
+.btn-lg{padding:14px 28px;font-size:16px}
+.btn-block{width:100%}
+.btn-group{display:flex;gap:8px;flex-wrap:wrap}
+/* === Chips === */
+.chip{display:inline-flex;align-items:center;gap:4px;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;border:1.5px solid #e2e8f0;background:white;color:#475569}
+.chip:hover{border-color:#3b82f6;color:#2563eb}
+.chip.active{background:#2563eb;color:white;border-color:#2563eb}
+.dark .chip{background:#1e293b;border-color:#334155;color:#94a3b8}
+.dark .chip:hover{border-color:#3b82f6;color:#60a5fa}
+.dark .chip.active{background:#2563eb;color:white;border-color:#2563eb}
+/* === Progress === */
+.progress-track{height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden}
+.dark .progress-track{background:#334155}
+.progress-fill{height:100%;background:linear-gradient(90deg,#2563eb,#06b6d4);border-radius:3px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+/* === Animations === */
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse-ring{0%{box-shadow:0 0 0 0 rgba(37,99,235,.4)}70%{box-shadow:0 0 0 12px rgba(37,99,235,0)}100%{box-shadow:0 0 0 0 rgba(37,99,235,0)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+.spinner{width:24px;height:24px;border:3px solid #e2e8f0;border-top-color:#2563eb;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle}
+.spinner-lg{width:40px;height:40px;border-width:4px}
+.animate-ring{animation:pulse-ring 2s cubic-bezier(.4,0,.6,1) infinite}
+.skeleton{background:linear-gradient(90deg,#e2e8f0 25%,#f1f5f9 50%,#e2e8f0 75%);background-size:200% 100%;animation:shimmer 1.5s ease-in-out infinite;border-radius:8px}
+.dark .skeleton{background:linear-gradient(90deg,#334155 25%,#1e293b 50%,#334155 75%);background-size:200% 100%}
+/* === Misc === */
+.toast-container{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{padding:12px 20px;border-radius:12px;font-size:14px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.15);transform:translateX(120%);transition:transform .4s cubic-bezier(.4,0,.2,1);pointer-events:auto;max-width:360px;backdrop-filter:blur(12px)}
+.toast.show{transform:translateX(0)}
+.toast-success{background:#16a34a;color:white}
+.toast-error{background:#dc2626;color:white}
+.toast-info{background:#2563eb;color:white}
+.toast-warning{background:#d97706;color:white}
+.katex-block{margin:8px 0;overflow-x:auto;padding:4px 0}
+/* === Scrollbar === */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#94a3b8}
+.dark ::-webkit-scrollbar-thumb{background:#475569}
+/* === Feature Card === */
+.feature-card{background:white;border-radius:16px;padding:20px;cursor:pointer;transition:all .25s;border:1px solid rgba(0,0,0,.04);box-shadow:0 1px 3px rgba(0,0,0,.04);position:relative;overflow:hidden}
+.feature-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.08);border-color:rgba(59,130,246,.2)}
+.feature-card:active{transform:translateY(0)}
+.dark .feature-card{background:#1e293b;border-color:rgba(255,255,255,.06)}
+.dark .feature-card:hover{border-color:rgba(59,130,246,.3);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.feature-card .fc-icon{font-size:36px;margin-bottom:8px}
+.feature-card .fc-name{font-weight:700;font-size:15px;color:#1e293b;margin-bottom:2px}
+.dark .feature-card .fc-name{color:#f1f5f9}
+.feature-card .fc-desc{font-size:12px;color:#64748b;line-height:1.4}
+.feature-card .fc-badge{position:absolute;top:12px;right:12px;font-size:10px;padding:2px 8px;border-radius:8px;background:rgba(59,130,246,.1);color:#2563eb;font-weight:600}
+/* === Result === */
+.result-body h1,.result-body h2,.result-body h3{font-weight:700;margin:16px 0 8px}
+.result-body h2{font-size:17px;color:#1e293b}
+.dark .result-body h2{color:#e2e8f0}
+.result-body h3{font-size:15px;color:#475569;margin-top:12px}
+.dark .result-body h3{color:#94a3b8}
+.result-body p{margin:6px 0;line-height:1.6}
+.result-body ul,.result-body ol{padding-left:20px;margin:6px 0}
+.result-body li{margin:3px 0;line-height:1.5}
+.result-body strong{color:#1e293b}
+.dark .result-body strong{color:#f1f5f9}
+/* === Step Progress Dots === */
+.step-dots{display:flex;gap:8px;justify-content:center;margin-bottom:16px}
+.step-dot{width:12px;height:12px;border-radius:50%;background:#e2e8f0;transition:all .3s}
+.step-dot.done{background:#2563eb}
+.step-dot.active{background:#3b82f6;transform:scale(1.4);box-shadow:0 0 0 4px rgba(59,130,246,.2)}
+.dark .step-dot{background:#334155}
+.dark .step-dot.done{background:#3b82f6}
+/* === Modal === */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(8px);z-index:100;display:none;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s ease}
+.modal-overlay.show{display:flex}
+.modal-box{background:white;border-radius:20px;padding:24px;max-width:520px;width:100%;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:slideUp .3s ease}
+.dark .modal-box{background:#1e293b}
+/* === Grid === */
+.auto-grid{display:grid;gap:12px}
+@media(min-width:640px){.auto-grid{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:1024px){.auto-grid{grid-template-columns:repeat(3,1fr);gap:16px}}
+@media(min-width:1280px){.auto-grid{grid-template-columns:repeat(4,1fr)}}
+/* === Dark mode toggle === */
+.theme-toggle{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;transition:all .3s;background:rgba(0,0,0,.04)}
+.theme-toggle:hover{background:rgba(0,0,0,.08)}
+.dark .theme-toggle{background:rgba(255,255,255,.08)}
+.dark .theme-toggle:hover{background:rgba(255,255,255,.12)}
+/* === Responsive === */
+@media(max-width:768px){
+  .sidebar{display:none}
+  .main-content{margin-left:0}
+  .content-page{padding:16px 16px 80px}
+  .hero{padding:24px 20px;border-radius:16px}
+  .hero h1{font-size:22px}
+  .bottom-tabs{display:flex}
+  .btn-lg{padding:12px 24px;font-size:15px}
+}
+@media(max-width:480px){
+  .content-page{padding:12px 12px 76px}
+  .hero{padding:20px 16px}
+  .hero h1{font-size:20px}
+  .feature-card{padding:16px}
+  .feature-card .fc-icon{font-size:28px}
+}
+/* === Tab content inside a page === */
+.tab-bar{display:flex;gap:2px;background:#f1f5f9;border-radius:12px;padding:3px;margin-bottom:16px;overflow-x:auto}
+.dark .tab-bar{background:#0f172a}
+.tab-btn{padding:8px 16px;border-radius:10px;font-size:13px;font-weight:500;white-space:nowrap;cursor:pointer;transition:all .2s;color:#64748b;border:none;background:transparent;flex-shrink:0}
+.tab-btn:hover{color:#334155}
+.tab-btn.active{background:white;color:#2563eb;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.dark .tab-btn{color:#94a3b8}
+.dark .tab-btn:hover{color:#e2e8f0}
+.dark .tab-btn.active{background:#1e293b;color:#60a5fa}
+/* === Collapsible === */
+.collapse-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer;border-radius:12px;transition:background .2s}
+.collapse-header:hover{background:rgba(0,0,0,.02)}
+.dark .collapse-header:hover{background:rgba(255,255,255,.02)}
+.collapse-body{padding:0 16px 12px;display:none}
+.collapse-body.open{display:block}
+/* === Timer === */
+.timer{font-variant-numeric:tabular-nums;font-weight:700;font-size:32px;letter-spacing:2px;color:#2563eb}
+.dark .timer{color:#60a5fa}
+.timer.warning{color:#dc2626;animation:pulse-slow 1s infinite}
+</style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900">
+
+<!-- ════ Toast Container ════ -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- ════ Desktop Sidebar ════ -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-brand" onclick="switchPage('home')" title="Smart Tutor">🎓</div>
+  <div class="sidebar-nav" id="sidebar-nav">
+    <div class="nav-item active" data-page="home" onclick="switchPage('home')">
+      <span class="nav-icon">📷</span><span class="nav-label">解题</span>
+    </div>
+    <div class="nav-item" data-page="sprint" onclick="switchPage('sprint')">
+      <span class="nav-icon">🚀</span><span class="nav-label">速通</span>
+    </div>
+    <div class="nav-item" data-page="mock" onclick="switchPage('mock')">
+      <span class="nav-icon">🎯</span><span class="nav-label">模拟考</span>
+    </div>
+    <div class="nav-item" data-page="innovations" onclick="switchPage('innovations');loadInnovations()">
+      <span class="nav-icon">🧠</span><span class="nav-label">创新</span>
+    </div>
+    <div class="nav-item" data-page="references" onclick="switchPage('references')">
+      <span class="nav-icon">📐</span><span class="nav-label">常量</span>
+    </div>
+    <div class="nav-item" data-page="errors" onclick="switchPage('errors');loadErrors()">
+      <span class="nav-icon">📓</span><span class="nav-label">错题本</span>
+    </div>
+    <div class="nav-item" data-page="security" onclick="switchPage('security');loadSecurityStatus()">
+      <span class="nav-icon">🔒</span><span class="nav-label">安全</span>
+    </div>
+    <div class="nav-item" data-page="history" onclick="switchPage('history');loadHistory()">
+      <span class="nav-icon">📋</span><span class="nav-label">历史</span>
+    </div>
+  </div>
+  <div class="theme-toggle" onclick="toggleTheme()" id="theme-btn" title="切换主题">🌙</div>
+</nav>
+
+<!-- ════ Mobile Bottom Tabs ════ -->
+<div class="bottom-tabs" id="bottom-tabs">
+  <div class="bottom-tab active" data-page="home" onclick="switchPage('home')">
+    <span class="tab-icon">📷</span><span class="tab-label">解题</span>
+  </div>
+  <div class="bottom-tab" data-page="sprint" onclick="switchPage('sprint')">
+    <span class="tab-icon">🚀</span><span class="tab-label">速通</span>
+  </div>
+  <div class="bottom-tab" data-page="mock" onclick="switchPage('mock')">
+    <span class="tab-icon">🎯</span><span class="tab-label">模拟考</span>
+  </div>
+  <div class="bottom-tab" data-page="innovations" onclick="switchPage('innovations');loadInnovations()">
+    <span class="tab-icon">🧠</span><span class="tab-label">创新</span>
+  </div>
+  <div class="bottom-tab" data-page="references" onclick="switchPage('references')">
+    <span class="tab-icon">📐</span><span class="tab-label">常量</span>
+  </div>
+</div>
+
+<!-- ════ Main Content ════ -->
+<main class="main-content" id="main-content">
+
+  <!-- ======== 首页：解题 ======== -->
+  <div id="page-home" class="content-page active">
+    <div class="hero">
+      <div class="hero-content">
+        <div class="hero-badge">🎓 大学物理垂直 AI · v5.0</div>
+        <h1>Smart Tutor</h1>
+        <p>拍照识别 · 智能解答 · 知识点扩展 · 举一反三</p>
+        <div class="flex gap-2 mt-4">
+          <span class="text-xs px-3 py-1 rounded-full bg-white/15 text-white/80">🏫 大物期末</span>
+          <span class="text-xs px-3 py-1 rounded-full bg-white/15 text-white/80">⚡ 电磁学</span>
+          <span class="text-xs px-3 py-1 rounded-full bg-white/15 text-white/80">📐 力学</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 状态栏 -->
+    <div class="flex items-center justify-between text-xs text-slate-400 mb-3 px-1">
+      <span id="sys-status">⏳ 加载中...</span>
+      <span id="rate-info"></span>
+    </div>
+
+    <!-- 模式选择 -->
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="setSolveMode(this,'full')">📝 完整解答</button>
+      <button class="tab-btn" onclick="setSolveMode(this,'step')">👣 逐步引导</button>
+      <button class="tab-btn" onclick="setSolveMode(this,'extended')">🎯 增强解答</button>
+    </div>
+
+    <!-- 科目选择 -->
+    <div class="flex flex-wrap gap-2 mb-4">
+      <span class="chip active" onclick="selectSubject(this,'auto')">🤖 自动识别</span>
+      <span class="chip" onclick="selectSubject(this,'physics')">⚡ 物理</span>
+      <span class="chip" onclick="selectSubject(this,'math')">📐 数学</span>
+      <span class="chip" onclick="selectSubject(this,'circuit')">🔌 电路</span>
+      <span class="chip" onclick="selectSubject(this,'chemistry')">🧪 化学</span>
+    </div>
+
+    <!-- 上传区域 -->
+    <div class="upload-zone mb-4" id="upload-zone" onclick="document.getElementById('file-input').click()"
+         ondragover="event.preventDefault();this.classList.add('dragover')"
+         ondragleave="this.classList.remove('dragover')"
+         ondrop="event.preventDefault();this.classList.remove('dragover');handleDrop(event)">
+      <input type="file" id="file-input" accept="image/*" capture="environment" class="hidden" onchange="onFileSelect(event)">
+      <div id="upload-placeholder">
+        <span class="upload-icon">📸</span>
+        <div class="text-slate-600 font-medium text-lg mb-1 dark:text-slate-300">点击拍照、选图或拖拽图片</div>
+        <div class="text-slate-400 text-sm">支持 jpg / png / webp · 最大 10MB</div>
+      </div>
+      <div id="upload-preview" class="hidden">
+        <img id="preview-img" class="max-h-[280px] object-contain mx-auto mb-3 rounded-xl" alt="预览">
+        <div class="flex items-center justify-center gap-3">
+          <span class="text-sm text-slate-500" id="file-name"></span>
+          <button class="btn btn-ghost btn-sm text-red-500" onclick="event.stopPropagation();clearFile()">✕ 重新选择</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-lg btn-block animate-ring" id="btn-submit" onclick="submitSolve()" disabled>
+      🤔 选择题目图片
+    </button>
+  </div>
+
+  <!-- ======== 结果页（内嵌） ======== -->
+  <div id="page-result" class="content-page">
+    <div class="flex items-center gap-3 mb-4">
+      <button class="btn btn-ghost text-xl" onclick="backToHome()">←</button>
+      <h2 class="text-lg font-bold text-slate-800 dark:text-slate-200" id="result-title">📝 解答结果</h2>
+      <span id="result-badge" class="ml-auto text-xs px-3 py-1 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 font-medium hidden"></span>
+    </div>
+
+    <!-- Loading -->
+    <div id="result-loading" class="card text-center py-12">
+      <div class="spinner spinner-lg mx-auto mb-4"></div>
+      <div class="text-slate-700 font-medium text-lg mb-2 dark:text-slate-300" id="progress-text">正在识别题目...</div>
+      <div class="progress-track max-w-xs mx-auto mb-3">
+        <div class="progress-fill" id="progress-fill" style="width:15%"></div>
+      </div>
+      <div class="text-xs text-slate-400" id="progress-detail">请稍候</div>
+    </div>
+
+    <!-- Full Mode Result -->
+    <div id="result-full" class="hidden">
+      <div class="card">
+        <div id="result-body" class="result-body text-slate-800 leading-relaxed text-[15px] dark:text-slate-200"></div>
+      </div>
+      <!-- OCR text toggle -->
+      <div id="result-ocr-wrap" class="hidden mb-3">
+        <div class="collapse-header" onclick="this.nextElementSibling.classList.toggle('open')">
+          <span class="text-sm font-medium text-slate-500">📄 OCR 识别文本</span>
+          <span class="text-slate-400">▼</span>
+        </div>
+        <div class="collapse-body">
+          <div class="text-sm text-slate-600 leading-relaxed dark:text-slate-400" id="ocr-body"></div>
+        </div>
+      </div>
+      <!-- Expansion buttons -->
+      <div id="result-extras" class="hidden space-y-2 mt-2 mb-3">
+        <div class="text-xs text-blue-600 font-medium mb-1" id="expansion-topic"></div>
+        <div class="btn-group">
+          <button class="btn btn-outline btn-sm" onclick="showExpansion('knowledge')">📚 知识点</button>
+          <button class="btn btn-outline btn-sm" onclick="showExpansion('application')">🌍 现实应用</button>
+          <button class="btn btn-outline btn-sm" onclick="showExpansion('variation')">🔄 举一反三</button>
+          <button class="btn btn-outline btn-sm" onclick="addToErrors()">📓 收入错题本</button>
+        </div>
+      </div>
+      <div class="btn-group mt-3">
+        <button class="btn btn-outline flex-1" onclick="backToHome()">📷 继续拍照</button>
+        <button class="btn btn-outline flex-1" onclick="copyResult()">📋 复制</button>
+      </div>
+    </div>
+
+    <!-- Step Mode -->
+    <div id="result-step" class="hidden">
+      <div class="step-dots" id="step-dots"></div>
+      <div class="card" style="border-left:4px solid #2563eb">
+        <div class="text-lg font-semibold text-slate-800 mb-2 dark:text-slate-200" id="step-title"></div>
+        <div class="result-body text-slate-700 leading-relaxed text-[15px] dark:text-slate-300" id="step-body"></div>
+      </div>
+      <button class="btn btn-success btn-lg btn-block mt-2" id="btn-next-step" onclick="nextStep()">继续→ 下一步</button>
+      <button class="btn btn-ghost btn-block mt-2" onclick="backToHome()">📷 换一题</button>
+    </div>
+
+    <!-- Error -->
+    <div id="result-error" class="hidden card text-center py-10">
+      <div class="text-5xl mb-3">⛔</div>
+      <div class="text-slate-700 font-medium text-lg mb-2 dark:text-slate-300" id="error-title">请求被拒绝</div>
+      <div class="text-slate-500 text-sm mb-4 dark:text-slate-400" id="error-detail"></div>
+      <button class="btn btn-outline" onclick="backToHome()">返回重试</button>
+    </div>
+  </div>
+
+  <!-- ======== 🚀 3天速通 ======== -->
+  <div id="page-sprint" class="content-page">
+    <div class="hero" style="background:linear-gradient(135deg,#065f46 0%,#10b981 50%,#34d399 100%)">
+      <div class="hero-content">
+        <div class="hero-badge">🚀 考前突击</div>
+        <h1>3天速通计划</h1>
+        <p>输入考试范围，AI生成3天冲刺计划 · 考点扫描 → 题型专项 → 模拟冲刺</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="text-sm font-semibold text-slate-700 mb-3 dark:text-slate-300">📋 输入考试范围</div>
+      <div class="flex gap-2 mb-3 flex-wrap">
+        <span class="chip" onclick="setSprintScope(this,'电磁学')">⚡ 电磁学</span>
+        <span class="chip" onclick="setSprintScope(this,'力学')">📐 力学</span>
+        <span class="chip" onclick="setSprintScope(this,'热学')">🔥 热学</span>
+        <span class="chip" onclick="setSprintScope(this,'光学')">💡 光学</span>
+        <span class="chip" onclick="setSprintScope(this,'大学物理')">📚 大物综合</span>
+      </div>
+      <div class="flex gap-2">
+        <input id="sprint-input" class="flex-1 border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-400" placeholder="例如：电磁学 第3~6章 或 大学物理下册" value="电磁学">
+        <button class="btn btn-success" onclick="generateSprint()">🚀 生成计划</button>
+      </div>
+    </div>
+    <div id="sprint-result" class="hidden">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="flex-1 h-1 bg-slate-200 rounded dark:bg-slate-700"><div class="h-full bg-emerald-500 rounded" id="sprint-progress" style="width:0%"></div></div>
+        <span class="text-xs text-slate-400" id="sprint-progress-label">Day 0/3</span>
+      </div>
+      <div id="sprint-content" class="result-body text-slate-700 leading-relaxed text-sm dark:text-slate-300"></div>
+    </div>
+  </div>
+
+  <!-- ======== 🎯 模拟考题 ======== -->
+  <div id="page-mock" class="content-page">
+    <div class="hero" style="background:linear-gradient(135deg,#7c3aed 0%,#a855f7 50%,#c084fc 100%)">
+      <div class="hero-content">
+        <div class="hero-badge">🎯 模拟考试</div>
+        <h1>智能组卷 · 限时演练</h1>
+        <p>AI根据知识点智能出卷 · 自动批改 · 做后即评</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="flex flex-wrap gap-3 items-end">
+        <div>
+          <div class="text-xs text-slate-500 mb-1 font-medium">题目数量</div>
+          <select id="mock-count" class="border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 rounded-xl px-3 py-2 text-sm outline-none">
+            <option value="3">3 题</option>
+            <option value="5" selected>5 题</option>
+            <option value="8">8 题</option>
+            <option value="10">10 题</option>
+          </select>
+        </div>
+        <div>
+          <div class="text-xs text-slate-500 mb-1 font-medium">限时 (分钟)</div>
+          <select id="mock-time" class="border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 rounded-xl px-3 py-2 text-sm outline-none">
+            <option value="15">15 min</option>
+            <option value="30" selected>30 min</option>
+            <option value="45">45 min</option>
+            <option value="60">60 min</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="startMockExam()">🎯 生成试卷</button>
+      </div>
+    </div>
+    <div id="mock-exam" class="hidden">
+      <div class="card flex items-center justify-between">
+        <div>
+          <span class="text-sm font-medium text-slate-700 dark:text-slate-300">⏱ 剩余时间</span>
+          <div class="timer" id="mock-timer">30:00</div>
+        </div>
+        <div class="text-right">
+          <span class="text-xs text-slate-400">已答题</span>
+          <div class="text-lg font-bold text-slate-700 dark:text-slate-300"><span id="mock-answered">0</span>/<span id="mock-total">5</span></div>
+        </div>
+      </div>
+      <div id="mock-questions" class="space-y-3"></div>
+      <button class="btn btn-success btn-lg btn-block mt-3" onclick="submitMockExam()" id="mock-submit-btn">📤 提交批改</button>
+      <div id="mock-result" class="hidden mt-3"></div>
+    </div>
+  </div>
+
+  <!-- ======== 🧠 创新功能 ======== -->
+  <div id="page-innovations" class="content-page">
+    <div class="hero" style="background:linear-gradient(135deg,#be123c 0%,#e11d48 50%,#fb7185 100%)">
+      <div class="hero-content">
+        <div class="hero-badge">🧠 创新功能</div>
+        <h1>7大智能学习工具</h1>
+        <p>一题通全章 · Boss闯关 · 命题预测 · 知识图谱 · 实验设计 · 知识卡片</p>
+      </div>
+    </div>
+    <div class="auto-grid" id="innovation-grid"></div>
+    <div id="innovation-detail" class="hidden mt-3">
+      <div id="innovation-detail-content" class="card"></div>
+    </div>
+  </div>
+
+  <!-- ======== 📐 常量/公式 ======== -->
+  <div id="page-references" class="content-page">
+    <div class="hero" style="background:linear-gradient(135deg,#0f766e 0%,#14b8a6 50%,#2dd4bf 100%)">
+      <div class="hero-content">
+        <div class="hero-badge">📐 物理常数 & 公式</div>
+        <h1>速查手册</h1>
+        <p>物理常数、单位换算、公式速查</p>
+      </div>
+    </div>
+    <!-- 搜索 -->
+    <div class="card">
+      <div class="flex gap-2">
+        <input id="const-search" class="flex-1 border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-blue-400" placeholder="搜索常数名（如 光速、普朗克常数）" oninput="searchConstants()">
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('const-search').value='';searchConstants()">✕</button>
+      </div>
+    </div>
+    <div id="const-list" class="space-y-2">
+      <div class="text-center py-8 text-slate-400"><div class="spinner mx-auto mb-3"></div>加载常数...</div>
+    </div>
+  </div>
+
+  <!-- ======== 🔒 安全 ======== -->
+  <div id="page-security" class="content-page">
+    <div class="hero" style="background:linear-gradient(135deg,#991b1b 0%,#dc2626 50%,#f87171 100%)">
+      <div class="hero-content">
+        <div class="hero-badge">🔒 安全防护</div>
+        <h1>安全检测引擎</h1>
+        <p>Prompt注入检测 · 输出过滤 · 速率限制 · 状态机防御</p>
+      </div>
+    </div>
+    <!-- 安全状态 -->
+    <div class="card">
+      <h3 class="font-semibold text-slate-800 dark:text-slate-200 mb-3">🛡️ 防护状态</h3>
+      <div id="security-modules" class="space-y-2">
+        <div class="text-center py-4 text-slate-400"><div class="spinner mx-auto mb-2"></div>加载状态...</div>
+      </div>
+    </div>
+    <!-- 自检按钮 -->
+    <div class="card">
+      <h3 class="font-semibold text-slate-800 dark:text-slate-200 mb-3">🧪 安全自检</h3>
+      <p class="text-xs text-slate-500 mb-3">用已知的注入样本测试检测引擎是否正常工作</p>
+      <button class="btn btn-primary" onclick="runSecurityTest()">🚀 运行自检</button>
+      <div id="security-test-result" class="mt-3 hidden"></div>
+    </div>
+  </div>
+
+  <!-- ======== 📓 错题本 ======== -->
+  <div id="page-errors" class="content-page">
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-3">
+        <button class="btn btn-ghost text-xl" onclick="switchPage('home')">←</button>
+        <h2 class="text-lg font-bold text-slate-800 dark:text-slate-200">📓 错题本</h2>
+      </div>
+      <span class="text-xs text-slate-400" id="error-stats-header"></span>
+    </div>
+    <div id="error-list" class="space-y-2">
+      <div class="text-center py-10 text-slate-400"><div class="spinner mx-auto mb-3"></div>加载中...</div>
+    </div>
+  </div>
+
+  <!-- ======== 📋 历史 ======== -->
+  <div id="page-history" class="content-page">
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-3">
+        <button class="btn btn-ghost text-xl" onclick="switchPage('home')">←</button>
+        <h2 class="text-lg font-bold text-slate-800 dark:text-slate-200">📋 答题历史</h2>
+      </div>
+      <span class="text-xs text-slate-400" id="history-stats"></span>
+    </div>
+    <div id="history-list" class="space-y-2">
+      <div class="text-center py-10 text-slate-400"><div class="spinner mx-auto mb-3"></div>加载中...</div>
+    </div>
+  </div>
+
+  <!-- ======== 扩展弹窗 ======== -->
+  <div class="modal-overlay" id="modal-overlay" onclick="closeModal()">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-bold text-slate-800 dark:text-slate-200" id="modal-title">📚 知识点扩展</h3>
+        <button class="btn btn-ghost btn-sm" onclick="closeModal()">✕</button>
+      </div>
+      <div id="modal-body" class="result-body text-sm text-slate-700 leading-relaxed dark:text-slate-300"></div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ════════════════════════════════════════════════════════════════
+// State
+// ════════════════════════════════════════════════════════════════
+const API_BASE = window.location.origin
+let selectedFile = null, selectedSubject = 'auto', currentMode = 'full'
+let currentResult = null, currentSession = null, currentStepData = null
+let currentSolveTopic = ''
+let pt = null, mockTimer = null, mockData = null, mockAnswered = 0
+let _lastPage = 'home'
+
+// ════════════════════════════════════════════════════════════════
+// Theme
+// ════════════════════════════════════════════════════════════════
+function toggleTheme() {
+  document.documentElement.classList.toggle('dark')
+  const isDark = document.documentElement.classList.contains('dark')
+  document.getElementById('theme-btn').textContent = isDark ? '☀️' : '🌙'
+  document.getElementById('meta-theme').content = isDark ? '#0f172a' : '#f1f5f9'
+  localStorage.setItem('theme', isDark ? 'dark' : 'light')
+}
+;(function initTheme() {
+  const t = localStorage.getItem('theme')
+  if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.documentElement.classList.add('dark')
+    document.getElementById('theme-btn').textContent = '☀️'
+    document.getElementById('meta-theme').content = '#0f172a'
+  }
+})()
+
+// ════════════════════════════════════════════════════════════════
+// Navigation
+// ════════════════════════════════════════════════════════════════
+function switchPage(name) {
+  _lastPage = name
+  document.querySelectorAll('.content-page').forEach(p => p.classList.remove('active'))
+  const page = document.getElementById('page-' + name)
+  if (page) page.classList.add('active')
+  // Update nav highlights
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === name))
+  document.querySelectorAll('.bottom-tab').forEach(t => t.classList.toggle('active', t.dataset.page === name))
+}
+
+function backToHome() { switchPage('home'); clearResult() }
+
+function clearResult() {
+  document.getElementById('result-loading').classList.add('hidden')
+  document.getElementById('result-full').classList.add('hidden')
+  document.getElementById('result-step').classList.add('hidden')
+  document.getElementById('result-error').classList.add('hidden')
+  document.getElementById('result-ocr-wrap').classList.add('hidden')
+  document.getElementById('result-extras').classList.add('hidden')
+  document.getElementById('result-badge').classList.add('hidden')
+  if (pt) clearInterval(pt)
+}
+
+// ════════════════════════════════════════════════════════════════
+// File Upload
+// ════════════════════════════════════════════════════════════════
+function onFileSelect(e) {
+  const f = e.target.files[0]; if(!f) return
+  loadFilePreview(f)
+}
+
+function handleDrop(e) {
+  const f = e.dataTransfer.files[0]; if(!f) return
+  loadFilePreview(f)
+}
+
+function loadFilePreview(f) {
+  selectedFile = f
+  const r = new FileReader()
+  r.onload = ev => {
+    document.getElementById('upload-placeholder').classList.add('hidden')
+    document.getElementById('upload-preview').classList.remove('hidden')
+    document.getElementById('preview-img').src = ev.target.result
+    document.getElementById('file-name').textContent = f.name
+    document.getElementById('upload-zone').classList.add('has-image')
+    updateSubmitBtn()
+  }
+  r.readAsDataURL(f)
+}
+
+function clearFile() {
+  selectedFile = null
+  document.getElementById('file-input').value = ''
+  document.getElementById('upload-placeholder').classList.remove('hidden')
+  document.getElementById('upload-preview').classList.add('hidden')
+  document.getElementById('upload-zone').classList.remove('has-image')
+  updateSubmitBtn()
+}
+
+function updateSubmitBtn() {
+  const btn = document.getElementById('btn-submit')
+  const labels = {full:'🚀 提交解答', step:'👣 逐步引导解答', extended:'🎯 增强解答'}
+  btn.disabled = !selectedFile
+  btn.textContent = selectedFile ? labels[currentMode] || '🚀 提交解答' : '🤔 选择题目图片'
+}
+
+// ════════════════════════════════════════════════════════════════
+// Mode & Subject
+// ════════════════════════════════════════════════════════════════
+function setSolveMode(el, mode) {
+  document.querySelectorAll('#page-home .tab-btn').forEach(b => b.classList.remove('active'))
+  el.classList.add('active')
+  currentMode = mode
+  updateSubmitBtn()
+}
+
+function selectSubject(el, subj) {
+  document.querySelectorAll('#page-home .chip').forEach(c => c.classList.remove('active'))
+  el.classList.add('active')
+  selectedSubject = subj
+}
+
+// ════════════════════════════════════════════════════════════════
+// Submit Solve
+// ════════════════════════════════════════════════════════════════
+async function submitSolve() {
+  if(!selectedFile) return showToast('请先拍照或选择图片', 'warning')
+  const btn = document.getElementById('btn-submit')
+  btn.disabled = true; btn.textContent = '⏳ 处理中...'
+  btn.classList.remove('animate-ring')
+
+  _lastPage = 'result'
+  switchPage('result')
+  clearResult()
+  document.getElementById('result-loading').classList.remove('hidden')
+  const isStep = currentMode === 'step'
+  document.getElementById('result-title').textContent = isStep ? '👣 逐步引导' : currentMode === 'extended' ? '🎯 增强解答' : '📝 解答结果'
+  if (isStep) document.getElementById('result-badge').textContent = '👣 分步模式'
+  else if (currentMode === 'extended') document.getElementById('result-badge').textContent = '🎯 含知识扩展'
+  else document.getElementById('result-badge').textContent = '📝 完整模式'
+  document.getElementById('result-badge').classList.remove('hidden')
+
+  simulateProgress(isStep)
+
+  try {
+    const fd = new FormData()
+    fd.append('file', selectedFile)
+    fd.append('subject', selectedSubject)
+    fd.append('mode', currentMode)
+
+    let endpoint = '/api/solve'
+    if (currentMode === 'extended') endpoint = '/api/solve-extended'
+    else if (currentMode === 'step') endpoint = '/api/solve'
+
+    const resp = await fetch(endpoint, {method:'POST', body:fd})
+    setProgress(90, isStep ? '正在生成逐步引导...' : '正在生成解答...')
+
+    if(!resp.ok) {
+      const err = await resp.json().catch(()=>({detail:'HTTP '+resp.status}))
+      throw new Error(err.detail || '服务器错误')
+    }
+    const data = await resp.json()
+    currentResult = data
+
+    if(isStep && data.mode === 'step') {
+      currentSession = data.id
+      showStep(data)
+    } else {
+      showFull(data)
+    }
+  } catch(err) {
+    showError(err.message)
+  } finally {
+    btn.disabled = false
+    updateSubmitBtn()
+    setTimeout(() => btn.classList.add('animate-ring'), 500)
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// Progress
+// ════════════════════════════════════════════════════════════════
+function simulateProgress(isStep) {
+  const steps = isStep
+    ? [{p:15,t:'识别题目...',d:'图像预处理'},{p:35,t:'文字提取...',d:'OCR识别'},{p:55,t:'题目分析...',d:'拆解步骤'},{p:75,t:'推导中...',d:'逐步推导'},{p:90,t:'即将完成',d:'格式整理'}]
+    : [{p:15,t:'识别题目...',d:'图像预处理'},{p:35,t:'OCR文字提取...',d:'识别模型'},{p:55,t:'交叉验证...',d:'双模型比对'},{p:75,t:'推理中...',d:'大模型推理'},{p:90,t:'即将完成',d:'输出审查'}]
+  let i=0; if(pt) clearInterval(pt)
+  pt = setInterval(() => {
+    if(i<steps.length){const s=steps[i++]; setProgress(s.p,s.t,s.d)}
+    else clearInterval(pt)
+  }, 1800)
+}
+
+function setProgress(pct,text,detail) {
+  document.getElementById('progress-fill').style.width=pct+'%'
+  if(text) document.getElementById('progress-text').textContent=text
+  if(detail) document.getElementById('progress-detail').textContent=detail
+}
+
+// ════════════════════════════════════════════════════════════════
+// Display - Full
+// ════════════════════════════════════════════════════════════════
+function showFull(data) {
+  clearInterval(pt); setProgress(100,'完成','')
+  setTimeout(() => {
+    document.getElementById('result-loading').classList.add('hidden')
+    document.getElementById('result-full').classList.remove('hidden')
+    document.getElementById('result-body').innerHTML = renderAnswer(data.answer||'(无)')
+    tryKaTeX()
+
+    // OCR
+    if(data.ocr_text && data.ocr_text.length > 10) {
+      document.getElementById('result-ocr-wrap').classList.remove('hidden')
+      document.getElementById('ocr-body').textContent = data.ocr_text
+    }
+
+    // Extras for physics topics
+    if(data.topic && data.topic !== '未知' && data.topic !== '') {
+      currentSolveTopic = data.topic
+      document.getElementById('expansion-topic').textContent = '🎯 知识点：' + data.topic
+      document.getElementById('result-extras').classList.remove('hidden')
+    }
+    // Extended result extras
+    if(data.expansion || data.applications || data.variations) {
+      currentSolveTopic = data.topic || ''
+      document.getElementById('expansion-topic').textContent = '🎯 知识点：' + (data.topic || '')
+      document.getElementById('result-extras').classList.remove('hidden')
+    }
+  }, 400)
+}
+
+// ════════════════════════════════════════════════════════════════
+// Display - Step
+// ════════════════════════════════════════════════════════════════
+function showStep(data) {
+  clearInterval(pt); setProgress(100,'完成','')
+  currentStepData = data
+  setTimeout(() => {
+    document.getElementById('result-loading').classList.add('hidden')
+    document.getElementById('result-step').classList.remove('hidden')
+    renderStep(data.step, data.current_step, data.total_steps)
+  }, 400)
+}
+
+function renderStep(step, current, total) {
+  document.getElementById('step-title').textContent = '📌 ' + (step.title||'')
+  document.getElementById('step-body').innerHTML = renderAnswer(step.content||'')
+  let dots = ''
+  for(let i=0;i<total;i++) {
+    let cls='step-dot'
+    if(i<current-1) cls+=' done'
+    else if(i===current-1) cls+=' active'
+    dots += '<div class="'+cls+'"></div>'
+  }
+  document.getElementById('step-dots').innerHTML = dots
+  const btn = document.getElementById('btn-next-step')
+  if(current >= total) {
+    btn.textContent = '✅ 已完成全部步骤'
+    btn.disabled = true
+    btn.className = 'btn btn-outline btn-block mt-2'
+  } else {
+    btn.textContent = '继续→ 下一步 ('+current+'/'+total+')'
+    btn.disabled = false
+    btn.className = 'btn btn-success btn-lg btn-block mt-2'
+  }
+  tryKaTeX()
+}
+
+async function nextStep() {
+  if(!currentSession) return
+  const btn = document.getElementById('btn-next-step')
+  btn.disabled = true; btn.textContent = '⏳ 加载中...'
+  try {
+    const resp = await fetch('/api/step/' + currentSession)
+    const data = await resp.json()
+    if(data.done) {
+      btn.textContent = '✅ 全部完成！'
+      btn.className = 'btn btn-outline btn-block mt-2'
+      showToast('🎉 所有步骤已完成！', 'success')
+      return
+    }
+    currentStepData = data
+    renderStep(data.step, data.current_step, data.total_steps)
+  } catch(err) {
+    showToast('加载失败: '+err.message, 'error')
+    btn.disabled = false; btn.textContent = '🔄 重试'
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// Error Display
+// ════════════════════════════════════════════════════════════════
+function showError(msg) {
+  clearInterval(pt)
+  document.getElementById('result-loading').classList.add('hidden')
+  document.getElementById('result-error').classList.remove('hidden')
+  document.getElementById('error-detail').textContent = msg
+  if(msg.includes('速率')) document.getElementById('error-title').textContent = '⏳ 操作太频繁'
+  else if(msg.includes('过大')) document.getElementById('error-title').textContent = '📎 文件过大'
+  else document.getElementById('error-title').textContent = '❌ 请求失败'
+}
+
+// ════════════════════════════════════════════════════════════════
+// Copy
+// ════════════════════════════════════════════════════════════════
+function copyResult() {
+  if(!currentResult||!currentResult.answer) return showToast('没有可复制的内容', 'warning')
+  navigator.clipboard.writeText(currentResult.answer.replace(/<[^>]*>/g,''))
+    .then(()=>showToast('✅ 已复制', 'success')).catch(()=>showToast('复制失败', 'error'))
+}
+
+// ════════════════════════════════════════════════════════════════
+// Render Answer (KaTeX + Markdown-like)
+// ════════════════════════════════════════════════════════════════
+function renderAnswer(text) {
+  if(!text) return '<span class="text-slate-400">(空)</span>'
+  let h = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  // Display math $$...$$
+  h = h.replace(/\$\$(.+?)\$\$/gs, (m,f) => {
+    try{return '<div class="katex-block my-2 overflow-x-auto">'+katex.renderToString(f.trim(),{throwOnError:false,displayMode:true})+'</div>'}
+    catch(e){return '<span class="text-red-500">$$'+f+'$$</span>'}
+  })
+  // Inline math $...$
+  h = h.replace(/\$(.+?)\$/g, (m,f) => {
+    try{return katex.renderToString(f,{throwOnError:false,displayMode:false})}
+    catch(e){return '<span class="text-red-500">$'+f+'$</span>'}
+  })
+  h = h.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+  h = h.replace(/\n/g,'<br>')
+  return h
+}
+
+function tryKaTeX() {
+  if(window.renderMathInElement) {
+    document.querySelectorAll('.result-body').forEach(el => {
+      renderMathInElement(el, {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})
+    })
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// Expansion (Knowledge/Application/Variation)
+// ════════════════════════════════════════════════════════════════
+function showExpansion(type) {
+  const topic = currentSolveTopic
+  if(!topic) return showToast('没有可扩展的知识点', 'warning')
+  const titles = {knowledge:'📚 知识点扩展', application:'🌍 现实落地', variation:'🔄 举一反三'}
+  const apis = {knowledge:'/api/knowledge/', application:'/api/application/', variation:'/api/variation/'}
+  openModal(titles[type]||'📚 扩展', '⏳ 加载中...')
+  fetch(apis[type] + encodeURIComponent(topic))
+    .then(r => r.json())
+    .then(d => {
+      document.getElementById('modal-body').innerHTML = renderAnswer(d.content || d.text || '(暂无内容)')
+      tryKaTeX()
+    })
+    .catch(e => { document.getElementById('modal-body').textContent = '加载失败: '+e.message })
+}
+
+// ════════════════════════════════════════════════════════════════
+// Add to Error Notebook
+// ════════════════════════════════════════════════════════════════
+function addToErrors() {
+  if(!currentResult) return showToast('没有当前结果', 'warning')
+  fetch('/api/errors/add', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      question: currentResult.ocr_text || currentSolveTopic || '未知题目',
+      user_answer: '(待订正)',
+      correct_answer: currentResult.answer || '',
+      error_reason: '需要复习',
+      topic: currentSolveTopic || '未知'
+    })
+  }).then(r=>r.json()).then(d=>{
+    showToast('✅ 已加入错题本', 'success')
+  }).catch(e=>showToast('添加失败', 'error'))
+}
+
+// ════════════════════════════════════════════════════════════════
+// Modal
+// ════════════════════════════════════════════════════════════════
+function openModal(title, bodyHtml) {
+  document.getElementById('modal-title').textContent = title
+  document.getElementById('modal-body').innerHTML = bodyHtml
+  document.getElementById('modal-overlay').classList.add('show')
+}
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('show')
+}
+
+// ════════════════════════════════════════════════════════════════
+// Toast
+// ════════════════════════════════════════════════════════════════
+function showToast(msg, type='info') {
+  const container = document.getElementById('toast-container')
+  const el = document.createElement('div')
+  el.className = 'toast toast-' + type
+  el.textContent = msg
+  container.appendChild(el)
+  requestAnimationFrame(() => el.classList.add('show'))
+  setTimeout(() => {
+    el.classList.remove('show')
+    setTimeout(() => el.remove(), 400)
+  }, 3000)
+}
+
+// ════════════════════════════════════════════════════════════════
+// 🚀 3天速通
+// ════════════════════════════════════════════════════════════════
+let _sprintScope = '电磁学'
+
+function setSprintScope(el, scope) {
+  document.querySelectorAll('#page-sprint .chip').forEach(c => c.classList.remove('active'))
+  if(el) el.classList.add('active')
+  _sprintScope = scope
+  document.getElementById('sprint-input').value = scope
+}
+
+async function generateSprint() {
+  const scope = document.getElementById('sprint-input').value.trim() || _sprintScope
+  const content = document.getElementById('sprint-content')
+  const result = document.getElementById('sprint-result')
+  result.classList.remove('hidden')
+  content.innerHTML = '<div class="text-center py-6"><div class="spinner mx-auto mb-3"></div>生成计划中...</div>'
+
+  try {
+    const resp = await fetch('/api/sprint/' + encodeURIComponent(scope))
+    const data = await resp.json()
+    content.innerHTML = renderAnswer(data.plan || data.content || '(无计划)')
+    tryKaTeX()
+    document.getElementById('sprint-progress').style.width = '33%'
+    document.getElementById('sprint-progress-label').textContent = 'Day 1/3 · 计划已生成'
+    showToast('🚀 速通计划已生成！', 'success')
+  } catch(e) {
+    content.innerHTML = '<div class="text-red-500 py-4 text-center">加载失败: '+e.message+'</div>'
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// 🎯 模拟考题
+// ════════════════════════════════════════════════════════════════
+async function startMockExam() {
+  const count = parseInt(document.getElementById('mock-count').value)
+  const minutes = parseInt(document.getElementById('mock-time').value)
+  const exam = document.getElementById('mock-exam')
+  const result = document.getElementById('mock-result')
+  result.classList.add('hidden')
+  exam.classList.remove('hidden')
+  document.getElementById('mock-questions').innerHTML = '<div class="text-center py-8"><div class="spinner mx-auto mb-3"></div>生成试卷中...</div>'
+  document.getElementById('mock-submit-btn').classList.remove('hidden')
+  mockAnswered = 0
+  document.getElementById('mock-answered').textContent = '0'
+  document.getElementById('mock-total').textContent = count
+
+  try {
+    const resp = await fetch('/api/mock?questions=' + count)
+    const data = await resp.json()
+    mockData = data
+
+    let html = ''
+    const questions = data.questions || []
+    questions.forEach((q, i) => {
+      html += '<div class="card mock-q" data-idx="'+i+'">'
+      html += '<div class="flex items-center gap-2 mb-2"><span class="text-xs font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 px-2 py-0.5 rounded-full">Q'+(i+1)+'</span>'
+      if(q.topic) html += '<span class="text-xs text-slate-400">'+q.topic+'</span>'
+      if(q.difficulty) html += '<span class="text-xs text-slate-400">· '+q.difficulty+'</span>'
+      html += '</div>'
+      html += '<div class="text-sm text-slate-700 dark:text-slate-300 mb-2">'+(q.question||q.title||'')+'</div>'
+      if(q.options) {
+        html += '<div class="space-y-1.5 mt-2">'
+        q.options.forEach((opt, oi) => {
+          const val = String.fromCharCode(65+oi)
+          html += '<label class="flex items-center gap-2 p-2 rounded-lg border border-slate-100 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800">'
+          html += '<input type="radio" name="mock-q'+i+'" value="'+val+'" onchange="onMockAnswer()" class="accent-blue-600">'
+          html += '<span class="text-sm text-slate-600 dark:text-slate-400">'+val+'. '+opt+'</span>'
+          html += '</label>'
+        })
+        html += '</div>'
+      } else {
+        html += '<textarea class="w-full border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 rounded-xl p-3 text-sm mt-2 resize-none" rows="2" placeholder="输入你的答案..." oninput="onMockAnswer()"></textarea>'
+      }
+      html += '</div>'
+    })
+    document.getElementById('mock-questions').innerHTML = html
+    document.getElementById('mock-total').textContent = questions.length
+
+    // Timer
+    startMockTimer(minutes)
+    showToast('📝 试卷已生成，计时开始！', 'info')
+  } catch(e) {
+    document.getElementById('mock-questions').innerHTML = '<div class="text-center py-8 text-red-500">生成失败: '+e.message+'</div>'
+  }
+}
+
+function startMockTimer(minutes) {
+  if(mockTimer) clearInterval(mockTimer)
+  let totalSec = minutes * 60
+  const timerEl = document.getElementById('mock-timer')
+  mockTimer = setInterval(() => {
+    totalSec--
+    const m = Math.floor(totalSec/60), s = totalSec%60
+    timerEl.textContent = String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')
+    timerEl.classList.toggle('warning', totalSec < 120)
+    if(totalSec <= 0) {
+      clearInterval(mockTimer)
+      showToast('⏰ 时间到！', 'warning')
+      submitMockExam()
+    }
+  }, 1000)
+}
+
+function onMockAnswer() {
+  const total = parseInt(document.getElementById('mock-total').textContent)
+  let answered = 0
+  document.querySelectorAll('.mock-q').forEach(q => {
+    const radios = q.querySelectorAll('input[type="radio"]:checked')
+    const textareas = q.querySelectorAll('textarea')
+    if(radios.length > 0 || (textareas.length > 0 && textareas[0].value.trim())) answered++
+  })
+  mockAnswered = answered
+  document.getElementById('mock-answered').textContent = answered
+}
+
+function submitMockExam() {
+  clearInterval(mockTimer)
+  const result = document.getElementById('mock-result')
+  result.classList.remove('hidden')
+  document.getElementById('mock-submit-btn').classList.add('hidden')
+
+  const total = parseInt(document.getElementById('mock-total').textContent)
+  const answered = mockAnswered
+  result.innerHTML = '<div class="card"><div class="text-center py-4"><div class="text-3xl mb-2">📊</div>'
+  result.innerHTML += '<div class="text-lg font-bold text-slate-700 dark:text-slate-300">作答情况</div>'
+  result.innerHTML += '<div class="text-sm text-slate-500 mt-1">已答 '+answered+'/'+total+' 题</div>'
+  const pct = total > 0 ? Math.round(answered/total*100) : 0
+  result.innerHTML += '<div class="progress-track mt-3"><div class="progress-fill" style="width:'+pct+'%"></div></div>'
+  result.innerHTML += '<div class="mt-4 text-xs text-slate-400">💡 建议对照标准答案逐一核对</div></div>'
+  showToast('📤 已提交！共答 '+answered+'/'+total+' 题', answered === total ? 'success' : 'warning')
+}
+
+// ════════════════════════════════════════════════════════════════
+// 🧠 创新功能
+// ════════════════════════════════════════════════════════════════
+const INNOVATION_MENU = [
+  {type:'chain',icon:'🔗',name:'一题通全章',desc:'从一道题扩展到全章知识点链'},
+  {type:'boss',icon:'👹',name:'Boss挑战',desc:'4小怪+1Boss闯关式复习'},
+  {type:'predict',icon:'🔮',name:'命题预测',desc:'基于考频分析预测考试重点'},
+  {type:'blindspot',icon:'🕳️',name:'知识盲区',desc:'分析错题发现薄弱知识点'},
+  {type:'notes',icon:'📝',name:'笔记图谱',desc:'输入笔记自动生成知识图谱'},
+  {type:'experiment',icon:'🧪',name:'实验设计',desc:'虚拟物理实验方案生成'},
+  {type:'cards',icon:'🃏',name:'知识卡片',desc:'碎片化记忆卡片刷题'},
+  {type:'socratic',icon:'🧑‍🏫',name:'苏格拉底教学',desc:'引导式提问启发思考'},
+]
+
+async function loadInnovations() {
+  const grid = document.getElementById('innovation-grid')
+  grid.innerHTML = '<div class="col-span-full text-center py-8 text-slate-400"><div class="spinner mx-auto mb-3" style="width:32px;height:32px;border-width:3px"></div>加载中...</div>'
+
+  let menu = INNOVATION_MENU.slice()
+  try {
+    const resp = await fetch('/api/innovations/menu')
+    if(resp.ok) {
+      const data = await resp.json()
+      if(data && data.length) menu = data
+    }
+  } catch(_) {}
+
+  grid.innerHTML = menu.map(item => `
+    <div class="feature-card" onclick="showInnovation('${item.type}')">
+      <div class="fc-icon">${item.icon || '🧩'}</div>
+      <div class="fc-name">${item.name}</div>
+      <div class="fc-desc">${item.desc || ''}</div>
+    </div>
+  `).join('')
+}
+
+async function showInnovation(type) {
+  const detail = document.getElementById('innovation-detail')
+  const content = document.getElementById('innovation-detail-content')
+  detail.classList.remove('hidden')
+  content.innerHTML = '<div class="text-center py-6"><div class="spinner mx-auto mb-3"></div>加载中...</div>'
+  content.scrollIntoView({behavior:'smooth',block:'start'})
+
+  try {
+    switch(type) {
+      case 'chain': {
+        const resp = await fetch('/api/chains')
+        const data = await resp.json()
+        let html = '<div class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">🔗 选择科目查看一题通全章</div>'
+        html += '<div class="flex flex-wrap gap-2 mb-3">'
+        ;(data.chains||data.subjects||[]).forEach(s => {
+          html += '<span class="chip" onclick="loadChainSubject(\''+s+'\')">'+s+'</span>'
+        })
+        html += '</div><div id="chain-result"></div>'
+        content.innerHTML = html
+        break
+      }
+      case 'boss': {
+        const resp = await fetch('/api/boss/start', {method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'})
+        const data = await resp.json()
+        if(data.session_id) {
+          let html = '<div class="flex items-center gap-2 mb-3"><span class="text-2xl">👹</span><span class="font-bold text-slate-800 dark:text-slate-200">Boss挑战</span></div>'
+          html += '<div class="progress-track mb-3"><div class="progress-fill" style="width:0%"></div></div>'
+          if(data.minions && data.minions.length) {
+            html += '<div class="space-y-2">'
+            data.minions.forEach(m => {
+              html += '<div class="flex items-center justify-between p-3 rounded-xl border border-slate-100 dark:border-slate-700 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800" onclick="fightMinion(\''+data.session_id+'\',\''+m.id+'\')"><span class="text-sm text-slate-700 dark:text-slate-300">'+m.name+'</span><span class="text-xs '+(m.defeated?'text-green-500':'text-slate-400')+'">'+(m.defeated?'✅ 已击败':'⚔️ 挑战')+'</span></div>'
+            })
+            html += '</div>'
+            html += '<div id="boss-final-btn" class="hidden mt-3"><button class="btn btn-success btn-block" onclick="fightBossFinal(\''+data.session_id+'\')">🏆 挑战最终Boss</button></div>'
+          }
+          content.innerHTML = html
+        } else {
+          content.innerHTML = renderAnswer(data.content||data.text||'(无数据)')
+        }
+        break
+      }
+      case 'predict': {
+        const resp = await fetch('/api/predict')
+        const data = await resp.json()
+        content.innerHTML = renderAnswer(data.content||data.text||'(无预测数据)')
+        tryKaTeX()
+        break
+      }
+      case 'blindspot': {
+        const resp = await fetch('/api/blindspots')
+        const data = await resp.json()
+        content.innerHTML = renderAnswer(data.content||data.text||'(无盲区数据)')
+        tryKaTeX()
+        break
+      }
+      case 'notes': {
+        content.innerHTML = '<div class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">📝 输入笔记文本生成知识图谱</div>'+
+          '<textarea id="notes-input" class="w-full border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 rounded-xl p-3 text-sm resize-none" rows="4" placeholder="粘贴你的笔记内容..."></textarea>'+
+          '<button class="btn btn-success mt-3 btn-block" onclick="submitNotes()">🚀 生成图谱</button>'+
+          '<div id="notes-result" class="mt-3"></div>'
+        break
+      }
+      case 'experiment': {
+        const resp = await fetch('/api/experiment')
+        const data = await resp.json()
+        content.innerHTML = renderAnswer(data.content||data.text||'(无实验数据)')
+        tryKaTeX()
+        break
+      }
+      case 'socratic': {
+        content.innerHTML = '<div class="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">🧑‍🏫 苏格拉底式教学</div>'+
+          '<p class="text-xs text-slate-500 mb-3">输入一个物理概念或主题，AI会通过提问引导你思考，而不是直接给答案。</p>'+
+          '<div class="flex gap-2 mb-3"><input id="socratic-topic" class="flex-1 border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none" placeholder="例如：牛顿第二定律" value="受力分析">'+
+          '<button class="btn btn-success btn-sm" onclick="startSocratic()">开始</button></div>'+
+          '<div id="socratic-dialog" class="space-y-3"></div>'
+        break
+      }
+      case 'cards': {
+        const resp = await fetch('/api/cards')
+        const data = await resp.json()
+        if(data.cards && Array.isArray(data.cards)) {
+          let html = '<div class="flex flex-wrap gap-2 mb-3">'
+          data.cards.forEach(c => {
+            html += '<div class="card flex-1 min-w-[200px] p-4"><div class="text-xs text-blue-600 font-medium mb-1">'+c.topic+'</div><div class="font-semibold text-sm text-slate-800 dark:text-slate-200 mb-1">'+(c.formula||'')+'</div><div class="text-xs text-slate-500">'+c.brief+'</div></div>'
+          })
+          html += '</div>'
+          content.innerHTML = html
+        } else {
+          content.innerHTML = renderAnswer(data.content||data.text||'(无卡片数据)')
+        }
+        break
+      }
+      default:
+        content.innerHTML = '<div class="text-slate-400 py-6 text-center">未知功能</div>'
+    }
+  } catch(e) {
+    content.innerHTML = '<div class="text-red-500 py-6 text-center">加载失败: '+e.message+'</div>'
+  }
+}
+
+// Chain sub
+async function loadChainSubject(subject) {
+  const el = document.getElementById('chain-result')
+  if(!el) return
+  el.innerHTML = '<div class="spinner mx-auto my-4"></div>'
+  try {
+    const resp = await fetch('/api/chain/'+encodeURIComponent(subject))
+    const data = await resp.json()
+    el.innerHTML = renderAnswer(data.content||data.text||'(无内容)')
+    tryKaTeX()
+  } catch(e) {
+    el.innerHTML = '<div class="text-red-500 text-sm py-4">加载失败: '+e.message+'</div>'
+  }
+}
+
+// Boss sub
+async function fightMinion(sessionId, minionId) {
+  const content = document.getElementById('innovation-detail-content')
+  if(!content) return
+  content.innerHTML = '<div class="text-center py-6"><div class="spinner mx-auto mb-3"></div>⚔️ 战斗中...</div>'
+  try {
+    const resp = await fetch('/api/boss/fight/'+sessionId+'/'+minionId)
+    const data = await resp.json()
+    content.innerHTML = renderAnswer(data.content||data.text||'(战斗结果)')
+    tryKaTeX()
+    if(data.all_defeated) {
+      const btn = document.getElementById('boss-final-btn')
+      if(btn) btn.classList.remove('hidden')
+    }
+  } catch(e) {
+    content.innerHTML = '<div class="text-red-500 py-6 text-center">战斗失败: '+e.message+'</div>'
+  }
+}
+
+async function fightBossFinal(sessionId) {
+  const content = document.getElementById('innovation-detail-content')
+  if(!content) return
+  content.innerHTML = '<div class="text-center py-6"><div class="spinner mx-auto mb-3"></div>🏆 Boss战中...</div>'
+  try {
+    const resp = await fetch('/api/boss/final/'+sessionId)
+    const data = await resp.json()
+    content.innerHTML = renderAnswer(data.content||data.text||'(Boss战结果)')
+    tryKaTeX()
+  } catch(e) {
+    content.innerHTML = '<div class="text-red-500 py-6 text-center">Boss战失败: '+e.message+'</div>'
+  }
+}
+
+// Notes sub
+async function submitNotes() {
+  const input = document.getElementById('notes-input')
+  const result = document.getElementById('notes-result')
+  if(!input || !input.value.trim()) {
+    if(result) result.innerHTML = '<div class="text-red-400 text-sm py-2">请输入笔记内容</div>'
+    return
+  }
+  if(result) result.innerHTML = '<div class="spinner mx-auto my-4"></div>'
+  try {
+    const resp = await fetch('/api/notes/graph', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({text: input.value.trim()})
+    })
+    const data = await resp.json()
+    if(result) {
+      if(data.graph && data.graph.nodes) {
+        let html = '<div class="text-sm font-semibold mb-2">📊 知识图谱</div><div class="flex flex-wrap gap-2">'
+        data.graph.nodes.forEach(n => {
+          html += '<span class="chip" style="background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8">'+n.label+'</span>'
+        })
+        html += '</div>'
+        if(data.graph.edges && data.graph.edges.length) {
+          html += '<div class="text-xs text-slate-400 mt-2">共 '+data.graph.nodes.length+' 个知识点，'+data.graph.edges.length+' 条关联</div>'
+        }
+        result.innerHTML = html
+      } else {
+        result.innerHTML = renderAnswer(data.content||data.text||'(生成的图谱)')
+      }
+    }
+  } catch(e) {
+    if(result) result.innerHTML = '<div class="text-red-500 text-sm py-2">生成失败: '+e.message+'</div>'
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// 📐 常数/公式速查
+// ════════════════════════════════════════════════════════════════
+let _allConstants = []
+
+async function loadConstants() {
+  const list = document.getElementById('const-list')
+  try {
+    const resp = await fetch('/api/constants')
+    const data = await resp.json()
+    _allConstants = data.constants || []
+    renderConstants(_allConstants)
+  } catch(e) {
+    list.innerHTML = '<div class="text-center py-8 text-red-500">加载失败: '+e.message+'</div>'
+  }
+}
+
+function renderConstants(constants) {
+  const list = document.getElementById('const-list')
+  if(!constants || constants.length === 0) {
+    list.innerHTML = '<div class="text-center py-8 text-slate-400"><div class="text-4xl mb-3">📭</div>无常数数据</div>'
+    return
+  }
+  list.innerHTML = '<div class="auto-grid">' + constants.map(c => `
+    <div class="card p-4">
+      <div class="text-sm font-semibold text-slate-800 dark:text-slate-200">${c.name||c.symbol||'?'}</div>
+      <div class="text-xs text-slate-400 mt-0.5">${c.symbol||''}</div>
+      <div class="text-base font-bold text-blue-600 dark:text-blue-400 mt-1">${c.value||c.formula||''}</div>
+      <div class="text-xs text-slate-500 mt-1">${c.unit||''}</div>
+    </div>
+  `).join('') + '</div>'
+}
+
+function searchConstants() {
+  const q = document.getElementById('const-search').value.trim().toLowerCase()
+  if(!q) { renderConstants(_allConstants); return }
+  const filtered = _allConstants.filter(c =>
+    (c.name||'').toLowerCase().includes(q) ||
+    (c.symbol||'').toLowerCase().includes(q) ||
+    (c.description||'').toLowerCase().includes(q)
+  )
+  renderConstants(filtered.length ? filtered : _allConstants.slice(0, 3))
+  if(filtered.length === 0) {
+    document.getElementById('const-list').innerHTML = '<div class="text-center py-8 text-slate-400">未找到匹配的常数</div>'
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// 📓 错题本
+// ════════════════════════════════════════════════════════════════
+async function loadErrors() {
+  const list = document.getElementById('error-list')
+  list.innerHTML = '<div class="text-center py-10 text-slate-400"><div class="spinner mx-auto mb-3"></div>加载中...</div>'
+  try {
+    const resp = await fetch('/api/errors')
+    const data = await resp.json()
+    const stats = data.stats || {}
+    document.getElementById('error-stats-header').textContent = '共'+(stats.total||0)+'题 | 已掌握'+(stats.mastered||0)
+    if(!data.records || data.records.length === 0) {
+      list.innerHTML = '<div class="text-center py-10 text-slate-400"><div class="text-4xl mb-3">✨</div>暂无错题记录</div>'
+      return
+    }
+    // Stats bar
+    let html = '<div class="card mb-3">'
+    if(stats.by_topic) {
+      html += '<div class="text-xs text-slate-500 mb-2">📂 按知识点分布：</div>'
+      Object.entries(stats.by_topic).slice(0, 8).forEach(([t,c]) => {
+        const bar = '█'.repeat(Math.min(c, 10))
+        html += '<div class="flex items-center gap-2 text-xs mb-1"><span class="text-slate-600 dark:text-slate-400 w-20 truncate">'+t+'</span><span class="text-blue-500">'+bar+'</span><span class="text-slate-400">'+c+'</span></div>'
+      })
+    }
+    html += '</div>'
+    // Records
+    html += data.records.slice().reverse().slice(0, 30).map(r => {
+      const q = (r.question||'').slice(0, 40)
+      return '<div class="card p-3 flex items-start gap-3"><span class="text-red-400 text-lg">❌</span><div class="flex-1 min-w-0"><div class="text-sm text-slate-800 dark:text-slate-200 truncate">'+(q||'(空)')+'</div><div class="text-xs text-slate-400 mt-0.5">'+(r.time||'')+' · '+(r.topic||'')+'</div></div></div>'
+    }).join('')
+    list.innerHTML = html
+  } catch(e) {
+    list.innerHTML = '<div class="text-center py-10 text-red-500">加载失败: '+e.message+'</div>'
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// 📋 历史
+// ════════════════════════════════════════════════════════════════
+async function loadHistory() {
+  const list = document.getElementById('history-list')
+  list.innerHTML = '<div class="text-center py-10 text-slate-400"><div class="spinner mx-auto mb-3"></div>加载中...</div>'
+  try {
+    const resp = await fetch('/api/history?days=7')
+    const data = await resp.json()
+    document.getElementById('history-stats').textContent = '共'+data.total+'题 | ✅'+data.success+' ⛔'+data.blocked
+    if(!data.records.length) {
+      list.innerHTML = '<div class="text-center py-10 text-slate-400"><div class="text-4xl mb-3">📭</div>暂无记录</div>'
+      return
+    }
+    list.innerHTML = data.records.map(r => {
+      const t = new Date(r.time).toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})
+      const ic = r.blocked?'⛔':'✅'
+      const p = (r.ocr_text||r.answer||'').replace(/<[^>]*>/g,'').slice(0, 60)
+      return '<div class="card p-3 flex items-center gap-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition"><span class="text-lg">'+ic+'</span><div class="flex-1 min-w-0"><div class="text-sm text-slate-800 dark:text-slate-200 truncate">'+(p||'(空)')+'</div><div class="text-xs text-slate-400 mt-0.5">'+t+' · '+(r.subject||'')+'</div></div></div>'
+    }).join('')
+  } catch(e) {
+    list.innerHTML = '<div class="text-center py-10 text-red-500">加载失败: '+e.message+'</div>'
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// 🔒 安全功能
+// ════════════════════════════════════════════════════════════════
+async function loadSecurityStatus() {
+  const el = document.getElementById('security-modules')
+  try {
+    const resp = await fetch('/api/security/status')
+    const data = await resp.json()
+    let html = ''
+    const modules = [
+      {key:'injection_detection',icon:'🛡️',name:'Prompt注入检测'},
+      {key:'output_filter',icon:'🔍',name:'输出内容过滤'},
+      {key:'state_machine',icon:'⚙️',name:'状态机防御'},
+      {key:'socratic_engine',icon:'🧑‍🏫',name:'苏格拉底引擎'},
+      {key:'self_verify',icon:'✅',name:'自验证模块'},
+    ]
+    modules.forEach(m => {
+      const info = data[m.key] || {}
+      const ok = info.available && info.enabled
+      html += '<div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800">' +
+        '<span class="text-sm text-slate-700 dark:text-slate-300">'+m.icon+' '+m.name+'</span>' +
+        '<span class="text-xs px-2 py-0.5 rounded-full '+(ok?'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400':'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400')+'">'+(ok?'✅ 运行中':'❌ 未加载')+'</span></div>'
+    })
+    html += '<div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800 mt-2">' +
+      '<span class="text-sm text-slate-700 dark:text-slate-300">⏱️ 速率限制</span>' +
+      '<span class="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">✅ 30次/分钟</span></div>'
+    el.innerHTML = html
+  } catch(e) {
+    el.innerHTML = '<div class="text-center py-4 text-red-500">加载失败: '+e.message+'</div>'
+  }
+}
+
+async function runSecurityTest() {
+  const result = document.getElementById('security-test-result')
+  result.classList.remove('hidden')
+  result.innerHTML = '<div class="text-center py-4"><div class="spinner mx-auto mb-2"></div>运行自检...</div>'
+  try {
+    const resp = await fetch('/api/security/test')
+    const data = await resp.json()
+    let html = '<div class="text-sm font-semibold mb-2">自检结果：<span class="'+(data.passed===data.total?'text-green-600':'text-amber-600')+'">'+data.passed+'/'+data.total+' 通过</span></div>'
+    html += '<div class="space-y-1.5">'
+    data.results.forEach(r => {
+      const ok = r.correct
+      html += '<div class="flex items-center gap-2 p-2 rounded-lg '+ (ok?'bg-green-50 dark:bg-green-900/10':'bg-red-50 dark:bg-red-900/10') +'">' +
+        '<span>'+(ok?'✅':'❌')+'</span>' +
+        '<span class="text-xs text-slate-600 dark:text-slate-400">['+r.sample+']</span>' +
+        '<span class="text-xs font-medium text-slate-700 dark:text-slate-300">检测到: '+r.risk+'</span></div>'
+    })
+    html += '</div>'
+    result.innerHTML = html
+  } catch(e) {
+    result.innerHTML = '<div class="text-red-500 py-4 text-center">自检失败: '+e.message+'</div>'
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// 🧑‍🏫 苏格拉底教学
+// ════════════════════════════════════════════════════════════════
+async function startSocratic() {
+  const topic = document.getElementById('socratic-topic').value.trim()
+  if(!topic) return showToast('请输入主题', 'warning')
+  const dialog = document.getElementById('socratic-dialog')
+  dialog.innerHTML = '<div class="text-center py-4"><div class="spinner mx-auto mb-2"></div>生成引导问题...</div>'
+  try {
+    const resp = await fetch('/api/socratic/start', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({topic})
+    })
+    const data = await resp.json()
+    dialog.innerHTML = '<div class="card p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800"><div class="text-sm text-slate-700 dark:text-slate-300">'+(data.question||data.content||'思考一下，什么是'+topic+'？')+'</div></div>'+
+      '<div class="flex gap-2"><input id="socratic-answer" class="flex-1 border border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none" placeholder="输入你的思考..." onkeydown="if(event.key===\\'Enter\\')submitSocratic()">'+
+      '<button class="btn btn-primary btn-sm" onclick="submitSocratic()">回答</button></div>'+
+      '<div id="socratic-hint-area"></div>'
+  } catch(e) {
+    dialog.innerHTML = '<div class="text-red-500 py-4 text-center">加载失败: '+e.message+'</div>'
+  }
+}
+
+async function submitSocratic() {
+  const answer = document.getElementById('socratic-answer')
+  const hintArea = document.getElementById('socratic-hint-area')
+  if(!answer || !answer.value.trim()) return showToast('请输入你的思考', 'warning')
+  const question = document.querySelector('#socratic-dialog .card')?.textContent || ''
+  hintArea.innerHTML = '<div class="text-center py-2"><div class="spinner mx-auto"></div></div>'
+  try {
+    const resp = await fetch('/api/socratic/hint', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({question, answer: answer.value.trim()})
+    })
+    const data = await resp.json()
+    hintArea.innerHTML = '<div class="card p-4 mt-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800"><div class="text-sm text-slate-700 dark:text-slate-300">'+(data.hint||data.next_question||'再想想？')+'</div></div>'
+    if(data.next_question) {
+      hintArea.innerHTML += '<div class="card p-4 mt-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800"><div class="text-sm font-medium text-slate-700 dark:text-slate-300">💡 '+data.next_question+'</div></div>'
+    }
+    answer.value = ''
+  } catch(e) {
+    hintArea.innerHTML = '<div class="text-red-500 py-2 text-center">获取提示失败: '+e.message+'</div>'
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// ✨ Init
+// ════════════════════════════════════════════════════════════════
+;(async function init() {
+  try {
+    const r=await fetch('/api/status'); const d=await r.json()
+    document.getElementById('sys-status').textContent = d.solver ? '✅ 已连接 · '+d.identity : '❌ 离线'
+    document.getElementById('sys-status').className = 'text-xs ' + (d.solver ? 'text-green-600' : 'text-red-500')
+    if(d.physics_kb) document.getElementById('rate-info').textContent = '🧠 知识库就绪'
+  } catch(_){
+    document.getElementById('sys-status').textContent = '❌ 未连接'
+    document.getElementById('sys-status').className = 'text-xs text-red-500'
+  }
+  // Lazy load constants
+  loadConstants()
+})()
+</script>
+</body>
+</html>
